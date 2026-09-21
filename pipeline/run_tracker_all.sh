@@ -34,7 +34,7 @@ SAM3_VARIANTS=(
 # Variant B-strict: GS2 fixed 60s, no recovery
 # Variant B-parity: GS2 with recovery to match SAM3 scaffolding
 GS2_VARIANTS=(
-    "gs2:config/gs2_fixed.yaml"
+    "gs2:config/gs2_baseline.yaml"
     "gs2:config/gs2_adaptive_recovery.yaml"
 )
 

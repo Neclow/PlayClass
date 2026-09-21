@@ -17,10 +17,9 @@ scheduled keyframes are missing and which drawn shapes were unscheduled
 filtering can be re-applied later if needed.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
+
 from pathlib import Path
 
 import pandas as pd

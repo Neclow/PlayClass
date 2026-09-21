@@ -39,10 +39,9 @@ Usage:
         --out data/tracker_eval/video_manifest.csv
 """
 
-from __future__ import annotations
-
 import argparse
 import re
+
 from pathlib import Path
 
 import pandas as pd

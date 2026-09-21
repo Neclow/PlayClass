@@ -33,16 +33,16 @@ imports below pull in ``src.metrics`` and ``src.tracker.*``, which transitively
 require torch.
 """
 
-from __future__ import annotations
-
 import argparse
+
 from pathlib import Path
 
 import pandas as pd
+
 from loguru import logger
 from omegaconf import OmegaConf
 
-from .paths import ANNOTATION_FRAMES, MANIFEST_CSV, ROOT, TRACKER_CONFIG
+from .paths import ANNOTATION_FRAMES, DEFAULT_TRACKER_CONFIG, MANIFEST_CSV, ROOT
 
 # `src.metrics` / `src.tracker.*` pull in torch transitively and only the
 # `tracker` pixi env has it. The top-level CLI dispatcher imports this
@@ -159,7 +159,7 @@ def select_frames_for_video(
 def _add_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--manifest", type=Path, default=MANIFEST_CSV)
     parser.add_argument("--out", type=Path, default=ANNOTATION_FRAMES)
-    parser.add_argument("--config", type=Path, default=TRACKER_CONFIG)
+    parser.add_argument("--config", type=Path, default=DEFAULT_TRACKER_CONFIG)
     parser.add_argument(
         "--uniform-interval-seconds",
         type=float,

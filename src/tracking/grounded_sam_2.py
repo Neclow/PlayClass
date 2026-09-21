@@ -363,7 +363,9 @@ def _extract_carryover_masks(
 
 
 def _run_single_video(cfg, run_dir: Path, config_path: Path | None = None) -> None:
-    job_type = cfg.get("job_type", "gs2_fixed")
+    job_type = cfg.get("job_type", "gs2")
+    if config_path is not None:
+        job_type = Path(config_path).stem
     log_file = setup_logger(run_dir, job_type=job_type)
 
     logger.info("=" * 60)
