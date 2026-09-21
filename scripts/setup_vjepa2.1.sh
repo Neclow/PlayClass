@@ -1,46 +1,31 @@
 #!/usr/bin/env bash
-# Download V-JEPA 2.1 checkpoint and patch the torch.hub cache to avoid
+# Download V-JEPA 2.1 checkpoints and patch the torch.hub cache to avoid
 # the src/ namespace collision with this project's own src/ package.
 #
 # Usage:
-#   bash script/setup_vjepa21.sh [model]
-#
-# Models:
-#   vjepa2_1_vit_base_384    (ViT-B distilled from ViT-G)
-#   vjepa2_1_vit_large_384   (ViT-L distilled from ViT-G)
+#   bash scripts/setup_vjepa2.1.sh
 
 set -euo pipefail
 
-MODEL="${1:-vjepa2_1_vit_large_384}"
-
-# Map model names to checkpoint filenames
-declare -A CHECKPOINTS=(
-    ["vjepa2_1_vit_base_384"]="vjepa2_1_vitb_dist_vitG_384"
-    ["vjepa2_1_vit_large_384"]="vjepa2_1_vitl_dist_vitG_384"
+CHECKPOINTS=(
+    "vjepa2_1_vitb_dist_vitG_384"
+    "vjepa2_1_vitl_dist_vitG_384"
 )
 
-if [[ ! -v "CHECKPOINTS[$MODEL]" ]]; then
-    echo "Unknown model: $MODEL"
-    echo "Available: ${!CHECKPOINTS[*]}"
-    exit 1
-fi
-
-CKPT_NAME="${CHECKPOINTS[$MODEL]}"
-CKPT_URL="https://dl.fbaipublicfiles.com/vjepa2/${CKPT_NAME}.pt"
 CKPT_DIR="${HOME}/.cache/torch/hub/checkpoints"
-CKPT_PATH="${CKPT_DIR}/${CKPT_NAME}.pt"
-
 HUB_DIR="${HOME}/.cache/torch/hub/facebookresearch_vjepa2_main"
 
-# --- Step 1: Download checkpoint ---
 mkdir -p "$CKPT_DIR"
-if [[ -f "$CKPT_PATH" ]]; then
-    echo "Checkpoint already exists: $CKPT_PATH"
-else
-    echo "Downloading ${CKPT_NAME}.pt ..."
-    wget -q --show-progress -O "$CKPT_PATH" "$CKPT_URL"
-    echo "Saved to $CKPT_PATH"
-fi
+for CKPT_NAME in "${CHECKPOINTS[@]}"; do
+    CKPT_PATH="${CKPT_DIR}/${CKPT_NAME}.pt"
+    if [[ -f "$CKPT_PATH" ]]; then
+        echo "Checkpoint already exists: $CKPT_PATH"
+    else
+        echo "Downloading ${CKPT_NAME}.pt ..."
+        wget -q --show-progress -O "$CKPT_PATH" "https://dl.fbaipublicfiles.com/vjepa2/${CKPT_NAME}.pt"
+        echo "Saved to $CKPT_PATH"
+    fi
+done
 
 # --- Step 2: Clone hub repo (if not cached) ---
 if [[ -d "$HUB_DIR" ]]; then
