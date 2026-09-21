@@ -6,10 +6,8 @@
 #   bash script/setup_vjepa21.sh [model]
 #
 # Models:
-#   vjepa2_1_vit_large_384   (default, ViT-L distilled from ViT-G)
 #   vjepa2_1_vit_base_384    (ViT-B distilled from ViT-G)
-#   vjepa2_1_vit_giant_384   (ViT-G)
-#   vjepa2_1_vit_gigantic_384 (ViT-G2)
+#   vjepa2_1_vit_large_384   (ViT-L distilled from ViT-G)
 
 set -euo pipefail
 
@@ -19,8 +17,6 @@ MODEL="${1:-vjepa2_1_vit_large_384}"
 declare -A CHECKPOINTS=(
     ["vjepa2_1_vit_base_384"]="vjepa2_1_vitb_dist_vitG_384"
     ["vjepa2_1_vit_large_384"]="vjepa2_1_vitl_dist_vitG_384"
-    ["vjepa2_1_vit_giant_384"]="vjepa2_1_vitg_384"
-    ["vjepa2_1_vit_gigantic_384"]="vjepa2_1_vitG_384"
 )
 
 if [[ ! -v "CHECKPOINTS[$MODEL]" ]]; then
@@ -68,5 +64,4 @@ else
 fi
 
 echo ""
-echo "Setup complete. Run extraction with:"
-echo "  pixi run -e tracker python -m script.extract_embeddings_vjepa2 --video-dir data/video/batch data/video/batch2 --device cuda:0 --model-name $MODEL"
+echo "Setup complete"
