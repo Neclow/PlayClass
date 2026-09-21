@@ -1,48 +1,27 @@
-# SAM3 HuggingFace Tracking Pipeline
+# SAM3 Tracker — baseline (frame-0 grounding only).
+#
+# Strict ablation null:
+#   - frame-0 grounding only (no scan, no candidate ranking)
+#   - both fallbacks disabled (no Sam3VideoModel whole-chunk escape,
+#     no prev-chunk mask carry-over)
+#   - chunks where SAM 3 emits nothing at frame 0 produce empty predictions.
 
 # =============================================================================
 # INPUT / OUTPUT
 # =============================================================================
-job_type: "sam3_hf"
-# video_path: null # Path to single video file
 text_prompt: "bird"
-start_frame: 0 # 0: start from the beginning of the video
-max_frames_to_track: 0 # set to 0 to track the entire video
+start_frame: 0
+max_frames_to_track: 0
 
 # =============================================================================
-# CHUNKING MODE  — only ONE of these should be active at a time
-#
-#   Priority order (highest wins):
-#     1. reuse_chunk_info    → load boundaries from a previous run
-#     2. manual_chunk_frames → explicit frame pairs (see sam3_hf_manual_chunking.yaml)
-#     3. use_adaptive_chunking: true   → YOLO scan to find boundaries
-#     4. use_adaptive_chunking: false  → fixed chunk_seconds
+# CHUNKING — fixed 60s
 # =============================================================================
-
-# --- Mode 1: Reuse a previous run's chunk boundaries ---
 reuse_chunk_info: false
-reuse_run_dir: null # e.g. "ext-data/output/results/sam3-hf/20260306_152733_sam3_hf"
+reuse_run_dir: null
 
-# --- Mode 3/4: Adaptive or fixed chunking (active when reuse_chunk_info: false) ---
 yolo_scan_only: false
-use_adaptive_chunking: true
+use_adaptive_chunking: false
 chunk_seconds: 60
-adaptive_max_chunk_seconds: 120
-adaptive_search_window_seconds: 10.0
-
-# =============================================================================
-# YOLO SCAN  (used only when use_adaptive_chunking: true)
-# =============================================================================
-yolo_scan:
-  model: "model/yolo26x.pt"
-  conf_thresh: 0.25
-  iou_thresh: 0.45
-  tracker_config: "config/ultralytics/botsort.yaml"
-  allowed_classes: ["bird"]
-  separation_min_objects: 3
-  occlusion_iou_threshold: 0.07
-  separation_min_distance: 0.10
-  clustering_distance_threshold: 0.15
 
 # =============================================================================
 # TRACKING HEURISTICS
@@ -51,14 +30,16 @@ min_objects_for_tracking: 3
 max_lookback_frames: 10
 
 # =============================================================================
-# TEXT GROUNDING
+# TEXT GROUNDING — strict frame-0 null
 # =============================================================================
 text_grounding:
   enabled: true
   grounding_frames: 125
   min_objects: 3
-  best_frame_method: "combined"
-  fallback_to_prev_chunk: true
+  best_frame_method: "frame_zero"
+  chunk_zero_init_offset_frames: 125
+  fallback_to_prev_chunk: false
+  allow_sam3_videomodel_fallback: false
   id_matching: true
   id_match_iou_threshold: 0.10
 
