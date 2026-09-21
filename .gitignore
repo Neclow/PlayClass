@@ -56,7 +56,13 @@ __marimo__/
 # Models
 model/
 
-# Data
+# Research data: keep only documentation and manual corrections.
+data/**
+!data/**/
+!data/**/README.md
+!data/postprocessing/*/*/tracking_postprocessing.json
+
+# Legacy / removed
 ext/
 ext-data
 video-data/
