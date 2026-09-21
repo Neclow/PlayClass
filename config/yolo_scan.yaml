@@ -1,4 +1,4 @@
-# SAM3 HuggingFace — YOLO scan only
+# YOLO scan
 # Runs YOLO inference + boundary analysis and exits without loading SAM3 models.
 # Also used as the default config for script/compute_chunk_boundaries.py.
 
@@ -68,7 +68,7 @@ yolo_scan:
   model: "model/yolo26x.pt"
   conf_thresh: 0.25
   iou_thresh: 0.45
-  tracker_config: "config/botsort.yaml"
+  tracker_config: "config/ultralytics/botsort.yaml"
   allowed_classes: ["bird"]
 
   # --- Separation scoring ---

@@ -11,7 +11,7 @@ PYTORCH_ALLOC_CONF: "expandable_segments:True,garbage_collection_threshold:0.6"
 # =============================================================================
 job_type: "sam3_hf"
 # video_path: null # Path to single video file
-video_dir: "video-data/batch" # Batch-process all videos in directory (mutually exclusive with video_path)
+video_dir: "data/videos/day_28"
 text_prompt: "bird"
 output_dir: "ext-data/output/results/sam3-hf"
 start_frame: 0
@@ -45,7 +45,7 @@ yolo_scan:
   model: "model/yolo26x.pt"
   conf_thresh: 0.25
   iou_thresh: 0.45
-  tracker_config: "config/botsort.yaml"
+  tracker_config: "config/ultralytics/botsort.yaml"
   allowed_classes: ["bird"]
   separation_min_objects: 3
   occlusion_iou_threshold: 0.07
