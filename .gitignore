@@ -96,3 +96,7 @@ img/
 !.claude/rules/ # ignore settings but track rules
 .agents/
 agent-log/
+
+# Zenodo data prep
+scripts/prepare_zenodo.sh
+playclass_data.tar.gz
