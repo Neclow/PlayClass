@@ -1,25 +1,15 @@
-"""
-SAM3 Tracker Pipeline
-
-Processes video in chunks:
-- Grounding phase: Initialise text-prompt based multi-object detection with Sam3VideoModel for first N frames (e.g. 125 frames = 5s at 25fps) of each chunk
-- Transition phase: Sample points from masks in 'best' frame (i.e. frames with highest detection confidence score and/or lowest degree of occlusion), maintain object ID's between chunks
-- Tracking phase: Use sampled points and object ID's from transition phase to initialise point-based multi-object tracking with Sam3TrackerVideoModel
-
-The process is heavily inspired by the Grounded SAM 2 pipeline, the main difference being that both the grounding and tracking stages are run with a Sam3-based model from HuggingFace, rather two separate models (i.e. groundedDINO + SAM2).
-
-Usage:
-    python -m script.run_tracker --config config/tracker.yaml
-"""
+"""Tracking pipeline."""
 
 import json
 import shutil
+
 from collections import deque
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import torch
+
 from accelerate import Accelerator
 from loguru import logger
 from omegaconf import OmegaConf
@@ -33,15 +23,16 @@ from transformers import (
     Sam3VideoProcessor,
 )
 
-from src.config import (
-    create_run_directory,
+from ..io import (
+    FRAME_LOADERS,
     create_video_run_directory,
+    get_video_metadata,
+    load_video_frames,
     sanitize_filename,
     setup_logger,
 )
-from src.io import get_video_metadata, load_video_frames_torchcodec
-from src.memory import free_gpu_memory, free_system_memory
-from src.metrics import (
+from ..memory import free_gpu_memory, free_system_memory
+from ..metrics import (
     compute_max_pairwise_iou,
     compute_per_frame_metrics,
     compute_per_run_metrics,
@@ -50,24 +41,24 @@ from src.metrics import (
     per_run_metrics_to_multiindex_df,
     summary_metrics_to_df,
 )
-from src.tracker.chunking import (
+from ..viz import annotate_video_with_sam3_outputs, generate_all_visualizations
+from .chunking import (
     build_manual_chunks,
     chunk_video_frames_adaptive,
     load_chunks_from_chunk_info,
 )
-from src.tracker.grounding import (
+from .grounding import (
     find_best_grounding_frame,
     match_grounding_ids_to_previous,
     run_grounding,
 )
-from src.tracker.masks import (
+from .scan import run_yolo_scan, yolo_scan_to_df
+from .utils import (
     extract_equidistant_points_from_masks,
     find_frame_with_enough_objects,
     process_tracking_outputs,
     reseed_tracker_memory,
 )
-from src.tracker.scan import run_yolo_scan, yolo_scan_to_df
-from src.viz import annotate_video_with_sam3_outputs, generate_all_visualizations
 
 # Allow TF32 on Ampere+ GPUs — ~2x faster matmul with negligible precision loss
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -623,15 +614,21 @@ def _run_single_video(cfg, run_dir: Path, config_path: Path | None = None):
             fps,
             cfg.get("chunk_seconds", 60),
             separation_windows=yolo_separation_windows or None,
-            per_frame_metrics=yolo_scan_results.get("per_frame_metrics")
-            if yolo_scan_results
-            else None,
-            occlusion_periods=yolo_scan_results.get("occlusion_periods")
-            if yolo_scan_results
-            else None,
-            transition_frames=yolo_scan_results.get("transition_frames")
-            if yolo_scan_results
-            else None,
+            per_frame_metrics=(
+                yolo_scan_results.get("per_frame_metrics")
+                if yolo_scan_results
+                else None
+            ),
+            occlusion_periods=(
+                yolo_scan_results.get("occlusion_periods")
+                if yolo_scan_results
+                else None
+            ),
+            transition_frames=(
+                yolo_scan_results.get("transition_frames")
+                if yolo_scan_results
+                else None
+            ),
             search_window_seconds=cfg.get("adaptive_search_window_seconds", 10.0),
             max_chunk_seconds=cfg.get("adaptive_max_chunk_seconds", 150),
         )

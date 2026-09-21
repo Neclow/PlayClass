@@ -1,5 +1,5 @@
 """
-Data processing utilities for SAM3 tracking outputs.
+Data processing utilities for tracking outputs.
 
 Functions for extracting, converting, and processing mask/bbox/point data
 from model outputs.
@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_util
 import torch
+
 from loguru import logger
 
 

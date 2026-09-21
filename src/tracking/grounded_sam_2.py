@@ -1,33 +1,20 @@
 """
-Grounded-SAM-2 (gs2) tracker pipeline — faithful IDEA-Research baseline.
-
-A baseline that sits between YOLO+BoT-SORT and SAM3 in sophistication:
-GroundingDINO detects birds on the seed frame, SAM2 image predictor refines
-boxes to masks, and SAM2 video predictor propagates masks within each chunk.
-Between chunks, the mask state of the last frame of chunk N is carried over as
-the prompt for chunk N+1 — preserving identities without re-grounding.
-
-The grounding step is **strict** by design — single GroundingDINO call on
-frame 0 of chunk 0 at the user-specified `box_threshold`, no retry loop, no
-area filter, accept whatever comes back. This matches the IDEA-Research
-reference behavior (https://github.com/IDEA-Research/Grounded-SAM-2). The
-*only* unavoidable adaptation is chunking-with-mask-carryover, because
-SAM2's `init_state` cannot fit a 15-minute video in VRAM.
+Grounded-SAM-2 (gs2) tracker pipeline (tracker evaluation baseline).
 """
-
-from __future__ import annotations
 
 import gc
 import json
 import shutil
 import tempfile
 import time
+
 from pathlib import Path
 
 import cv2
 import numpy as np
 import pandas as pd
 import torch
+
 from loguru import logger
 from omegaconf import OmegaConf
 from PIL import Image
@@ -38,14 +25,14 @@ from transformers import (
     AutoProcessor,
 )
 
-from src.config import (
-    create_run_directory,
+from ..io import (
     create_video_run_directory,
+    get_video_metadata,
+    load_video_frames_sequential,
     setup_logger,
 )
-from src.io import get_video_metadata, load_video_frames_sequential
-from src.tracker.chunking import chunk_video_frames_adaptive
-from src.tracker.masks import process_tracking_outputs
+from .chunking import chunk_video_frames_adaptive
+from .utils import process_tracking_outputs
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GS2_DIR = REPO_ROOT / "ext" / "Grounded-SAM-2"
@@ -739,7 +726,10 @@ def _run_batch(cfg, batch_dir: Path, video_dir: Path, config_path: Path) -> None
         video_run_dir = create_video_run_directory(batch_dir, video_file.stem)
 
         video_cfg = OmegaConf.create(
-            {**OmegaConf.to_container(cfg, resolve=True), "video_path": str(video_file)}
+            {
+                **OmegaConf.to_container(cfg, resolve=True),
+                "video_path": str(video_file),
+            }
         )
 
         try:
@@ -747,24 +737,3 @@ def _run_batch(cfg, batch_dir: Path, video_dir: Path, config_path: Path) -> None
         except Exception as e:
             logger.error(f"Failed processing {video_file.name}: {e}")
             continue
-
-
-def run(cfg, config_path: str | Path) -> None:
-    config_path = Path(config_path)
-    video_path = cfg.get("video_path", None)
-    video_dir = cfg.get("video_dir", None)
-
-    if video_path and video_dir:
-        raise ValueError("Specify exactly one of video_path or video_dir, not both.")
-    if not video_path and not video_dir:
-        raise ValueError("Must specify either video_path or video_dir.")
-
-    job_type = cfg.get("job_type", "gs2_fixed")
-    batch_dir = create_run_directory(Path(cfg.output_dir), job_type)
-
-    if video_dir:
-        _run_batch(cfg, batch_dir, Path(video_dir), config_path=config_path)
-    else:
-        video_stem = Path(video_path).stem
-        run_dir = create_video_run_directory(batch_dir, video_stem)
-        _run_single_video(cfg, run_dir, config_path=config_path)

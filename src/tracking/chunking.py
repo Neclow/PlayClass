@@ -5,6 +5,7 @@ Helper functions for chunking logic, including building manual chunks from user-
 from pathlib import Path
 
 import numpy as np
+
 from loguru import logger
 
 
@@ -141,9 +142,11 @@ def chunk_video_frames_adaptive(
     fallback_lookup: dict[int, tuple[float, float]] = {
         m["frame_idx"]: (
             -m.get("max_pairwise_bbox_iou", 1.0),
-            m.get("min_centroid_distance", 0.0)
-            if m.get("min_centroid_distance", float("inf")) != float("inf")
-            else 0.0,
+            (
+                m.get("min_centroid_distance", 0.0)
+                if m.get("min_centroid_distance", float("inf")) != float("inf")
+                else 0.0
+            ),
         )
         for m in per_frame_metrics
         if m.get("num_objects", 0) >= 2

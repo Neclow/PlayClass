@@ -66,12 +66,6 @@ data/**
 ext/
 ext-data
 video-data/
-ext-data/
-data/eval/
-data/video/
-data/dataset/
-data/tsne/
-tracking/
 .dvc/
 
 # Notes & drafts

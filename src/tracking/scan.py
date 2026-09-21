@@ -15,12 +15,13 @@ from typing import Any, Dict, List, Tuple
 import cv2
 import numpy as np
 import pandas as pd
+
 from loguru import logger
 from omegaconf import OmegaConf
 from tqdm import tqdm
 
-from src.memory import free_gpu_memory
-from src.metrics import compute_separation_score, compute_yolo_per_frame_metrics
+from ..memory import free_gpu_memory
+from ..metrics import compute_separation_score, compute_yolo_per_frame_metrics
 
 
 def _draw_label(img: np.ndarray, label: str, x1: float, y1: float) -> None:

@@ -136,9 +136,9 @@ class TestSam3VideoInference:
         first_ids = set(outputs_per_frame[sorted_frames[0]]["object_ids"].tolist())
         for frame_idx in sorted_frames[1:]:
             frame_ids = set(outputs_per_frame[frame_idx]["object_ids"].tolist())
-            assert first_ids.issubset(frame_ids), (
-                f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
-            )
+            assert first_ids.issubset(
+                frame_ids
+            ), f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
 
     def test_output_keys(self, outputs_per_frame):
         """Each frame output should contain expected keys."""

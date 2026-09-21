@@ -8,11 +8,13 @@ frame, and matching grounding IDs across chunks.
 from typing import Callable
 
 import numpy as np
+
 from loguru import logger
 
 from src.memory import free_gpu_memory
 from src.metrics import compute_max_pairwise_iou
-from src.tracker.masks import get_all_objects_from_results
+
+from .utils import get_all_objects_from_results
 
 
 def run_grounding(
