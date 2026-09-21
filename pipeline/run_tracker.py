@@ -1,40 +1,77 @@
-"""
-Launcher for the SAM3 Tracker pipeline.
+"""Unified launcher for tracking pipelines (SAM 3, Grounded-SAM-2)."""
 
-Sets CUDA_VISIBLE_DEVICES and other env vars from the YAML config
-BEFORE torch is imported, then hands off to the real pipeline module.
-
-Usage:
-    python -m script.run_tracker --config config/tracker.yaml
-"""
-
-import argparse
 import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["PYTORCH_ALLOC_CONF"] = (
+    "expandable_segments:True,garbage_collection_threshold:0.6"
+)
+
+from argparse import ArgumentParser
+from pathlib import Path
 
 from omegaconf import OmegaConf
 
+from src._config import DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
+from src.io import create_video_run_directory
+
+DEFAULT_CONFIG = "config/sam3_best.yaml"
+
+
+def _infer_backend(cfg) -> str:
+    if "gs2" in cfg:
+        return "gs2"
+    return "sam3"
+
+
+def _get_backend_module(backend: str):
+    if backend == "sam3":
+        from src.tracking.sam3 import _run_batch, _run_single_video
+    elif backend == "gs2":
+        from src.tracking.grounded_sam_2 import _run_batch, _run_single_video
+    else:
+        raise ValueError(f"Unknown backend: {backend!r}")
+    return _run_batch, _run_single_video
+
+
+def run(cfg, config_path: str | Path, backend: str, video_path: str | Path) -> None:
+    config_path = Path(config_path)
+    video_path = Path(video_path)
+
+    _run_batch, _run_single_video = _get_backend_module(backend)
+
+    batch_dir = Path(DEFAULT_TRACKING_DIR) / config_path.stem
+    batch_dir.mkdir(parents=True, exist_ok=True)
+
+    if video_path.is_file():
+        run_dir = create_video_run_directory(batch_dir, video_path.stem)
+        _run_single_video(cfg, run_dir, config_path=config_path)
+    elif video_path.is_dir():
+        _run_batch(cfg, batch_dir, video_path, config_path=config_path)
+    else:
+        raise FileNotFoundError(f"Video path does not exist: {video_path}")
+
 
 def main():
-    parser = argparse.ArgumentParser(description="SAM3 Tracker")
+    parser = ArgumentParser(description="Tracking pipeline launcher")
     parser.add_argument(
         "--config",
         type=str,
-        default="config/tracker.yaml",
-        help="Path to config file (default: config/tracker.yaml)",
+        default=DEFAULT_CONFIG,
+        help="Path to tracking config file.",
     )
-    args, _ = parser.parse_known_args()
+    parser.add_argument(
+        "--video-path",
+        type=str,
+        default=DEFAULT_VIDEO_DIR,
+        help="Video file or directory of videos.",
+    )
+    args = parser.parse_args()
 
-    # Load config and set env vars BEFORE any torch import
     cfg = OmegaConf.load(args.config)
-    if cfg.get("CUDA_VISIBLE_DEVICES"):
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.CUDA_VISIBLE_DEVICES)
-    if cfg.get("PYTORCH_ALLOC_CONF"):
-        os.environ["PYTORCH_ALLOC_CONF"] = str(cfg.PYTORCH_ALLOC_CONF)
+    backend = _infer_backend(cfg)
 
-    # Now safe to import torch-dependent code
-    from src.tracker.tracker import run
-
-    run(cfg, config_path=args.config)
+    run(cfg, config_path=args.config, backend=backend, video_path=args.video_path)
 
 
 if __name__ == "__main__":
