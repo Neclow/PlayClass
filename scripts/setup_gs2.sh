@@ -33,7 +33,7 @@ fi
 # --- Grounded-SAM-2 + GroundingDINO (editable) ---
 # PyTorch is already provided by the cuda feature in pixi.toml.
 echo "Installing Grounded-SAM-2 packages..."
-export CUDA_HOME="/usr/lib/nvidia-cuda-toolkit/"
+export CUDA_HOME="/usr/local/cuda-12.6" # modify HERE
 (cd "$GS2_DIR" && uv pip install --no-deps -e . && uv pip install --no-build-isolation --no-deps -e grounding_dino)
 
 echo ""
