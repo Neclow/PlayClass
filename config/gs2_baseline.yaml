@@ -1,6 +1,4 @@
 # Grounded-SAM-2 Tracker — fixed 60s chunking, Day 28
-# Videos: C2G2, C5G3 (staged at ext-data/raw/rerun_fixed_day_28/).
-# Runs on CUDA 0 (pair with gs2_fixed_day_29.yaml on CUDA 1).
 #
 # Strict IDEA-Research reference behavior: single GroundingDINO call at
 # the thresholds below, no retry loop, no area filter. The only adaptation
