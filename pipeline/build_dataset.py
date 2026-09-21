@@ -1,49 +1,47 @@
-"""
-Build tracking_issues.json and tracking_postprocessing.json for each tracking
-subdirectory, then build the dataset in a single pass (no redundant disk
-re-reads).
+"""Build the behaviour dataset from tracking outputs and postprocessing JSONs.
 
-Discovers all ``tracking_outputs.parquet`` files recursively under
-``data/tracking/`` (or ``--tracking-dir``). Supports multiple tracking run
-directories (e.g. separate SAM3 runs for different video batches).
+Reads ``tracking_outputs.parquet`` from ``--tracking-dir`` (default:
+``data/results/tracking/sam3_best``) and reads/writes postprocessing JSONs
+(``tracking_issues.json``, ``tracking_postprocessing.json``, ``bird_info.json``)
+under ``--postprocessing-dir`` (default: ``data/postprocessing``).
 
 Steps:
 
-1. Discovers all tracking subdirectories (across all runs)
+1. Discovers all tracking subdirectories under ``--tracking-dir``
 2. Parses labels and bird info from Excel files (once)
-3. For each subdirectory:
-   a. Reads FPS from ``yolo_scan_summary.parquet`` (falls back to 25.0)
-   b. Loads ``tracking_outputs.parquet``
-   c. Detects ID transitions and mask overlaps → ``tracking_issues.json``
-   d. Creates or loads ``tracking_postprocessing.json``; if any remap ``to``
-      values are null, stops.
-4. Once all remaps are filled in, runs ``process_tracks`` on the in-memory data
-   and concatenates the results.
+3. For each video:
+   a. Reads ``tracking_outputs.parquet`` + FPS from ``--tracking-dir``
+   b. Checks ``--postprocessing-dir`` for existing JSONs
+   c. If missing: detects issues, prefills postprocessing, writes JSONs
+   d. If present: loads ``tracking_postprocessing.json``
+4. Once all remaps are filled in, runs ``process_tracks`` and concatenates.
 
 Typical workflow::
 
-    # First run: generates tracking_issues.json + tracking_postprocessing.json
-    pixi run -e sam3-hf build_dataset
+    # First run: generates JSONs in data/postprocessing/
+    pixi run -e tracker python -m pipeline.build_dataset
 
-    # Manually fill in "to" values and add trim entries in each
-    # tracking_postprocessing.json
+    # Manually fill in "to" values in each tracking_postprocessing.json
 
     # Second run: validates remaps, builds dataset
-    pixi run -e sam3-hf build_dataset
+    pixi run -e tracker python -m pipeline.build_dataset
 """
 
 import json
+
 from argparse import ArgumentParser
 from glob import glob
 from pathlib import Path
 
 import pandas as pd
+
 from loguru import logger
 
 from src._config import (
     DEFAULT_DATASET_DIR,
     DEFAULT_LABEL_DIR,
     DEFAULT_MIN_WINDOW_COVERAGE,
+    DEFAULT_POSTPROCESSING_DIR,
     DEFAULT_TRACKING_DIR,
 )
 from src.dataset.labels import process_labels, resolve_dual_groups
@@ -106,11 +104,12 @@ def _log_issues(issues, fps):
             )
 
 
-def process_tracking_subdir(tracking_dir, bird_info):
-    """Detect issues, write JSONs, return in-memory results.
+def process_tracking_subdir(tracking_dir, pp_dir, bird_info):
+    """Detect issues, write JSONs to pp_dir, return in-memory results.
 
-    If ``tracking_postprocessing.json`` already exists, skips issue detection
-    and bird_info generation (assumes the subdir was already processed).
+    Reads parquets from *tracking_dir*, reads/writes postprocessing JSONs
+    from/to *pp_dir*.  If ``tracking_postprocessing.json`` already exists in
+    *pp_dir*, skips issue detection and bird_info generation.
 
     Returns
     -------
@@ -121,13 +120,15 @@ def process_tracking_subdir(tracking_dir, bird_info):
         ``fps``: video FPS
     """
     tracking_dir = Path(tracking_dir)
+    pp_dir = Path(pp_dir)
+    pp_dir.mkdir(parents=True, exist_ok=True)
     video_id = extract_video_id(tracking_dir.name)
 
     fps = get_video_fps(tracking_dir)
     tracks = pd.read_parquet(tracking_dir / "tracking_outputs.parquet").reset_index()
     tracks = tracks.rename(columns={"object_id": "tracking_id"})
 
-    pp_path = tracking_dir / "tracking_postprocessing.json"
+    pp_path = pp_dir / "tracking_postprocessing.json"
     if pp_path.exists():
         postprocessing = _load_json(pp_path)
         logger.info(
@@ -140,11 +141,11 @@ def process_tracking_subdir(tracking_dir, bird_info):
 
         issues = detect_tracking_issues(tracks, fps)
         _log_issues(issues, fps)
-        _save_json(tracking_dir / "tracking_issues.json", issues)
+        _save_json(pp_dir / "tracking_issues.json", issues)
 
         video_birds = bird_info.get(video_id, {})
         if video_birds:
-            _save_json(tracking_dir / "bird_info.json", video_birds)
+            _save_json(pp_dir / "bird_info.json", video_birds)
             logger.info(f"  Saved bird_info.json ({len(video_birds)} bird(s))")
         else:
             logger.warning(f"  No bird info matched for {tracking_dir.name}")
@@ -190,8 +191,14 @@ def parse_args():
     parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_TRACKING_DIR,
+        default=f"{DEFAULT_TRACKING_DIR}/sam3_best",
         help="Root dir to search for tracking_outputs.parquet (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--postprocessing-dir",
+        type=Path,
+        default=DEFAULT_POSTPROCESSING_DIR,
+        help="Dir to read/write postprocessing JSONs (default: %(default)s)",
     )
     parser.add_argument(
         "--output-dir",
@@ -256,7 +263,13 @@ def main():
     logger.info(f"Found {len(tracking_dirs)} tracking subdirectory(ies)")
 
     # 4. Detect issues + prefill remaps per subdir (keeps data in memory)
-    results = [process_tracking_subdir(d, bird_info) for d in tracking_dirs]
+    #    Map each tracking subdir to its postprocessing counterpart by
+    #    preserving the relative path (e.g. day_28/{stem}/).
+    results = []
+    for d in tracking_dirs:
+        rel = d.relative_to(args.tracking_dir)
+        pp_dir = args.postprocessing_dir / rel
+        results.append(process_tracking_subdir(d, pp_dir, bird_info))
 
     # 5. Build dataset from in-memory data
     logger.info("Building dataset...")
