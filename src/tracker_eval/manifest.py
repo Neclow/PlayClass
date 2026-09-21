@@ -33,10 +33,7 @@ appears in multiple timestamped runs, the lexicographically latest run is
 used (timestamp prefix orders correctly).
 
 Usage:
-    pixi run -e tracker python -m src.tracker_eval build-manifest \
-        --scan-runs-root ext-data/output/results/sam3-hf \
-        --raw-video-root ext-data/raw \
-        --out data/tracker_eval/video_manifest.csv
+    pixi run -e tracker python -m pipeline.eval_tracker_all build-manifest
 """
 
 import argparse

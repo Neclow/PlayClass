@@ -24,11 +24,7 @@ data dict are built only over GT-present frames so we only score frames
 that have human-verified ground truth.
 
 Usage:
-    pixi run -e tracker-evaluation python -m src.tracker_eval evaluate \
-        --gt-dir ext-data/tracker_benchmark/ground_truth \
-        --predictions-mot-dir ext-data/tracker_benchmark/predictions_mot \
-        --manifest data/tracker_eval/video_manifest.csv \
-        --out-dir data/tracker_eval/results
+    pixi run -e tracker python -m pipeline.eval_tracker_all evaluate
 """
 
 import argparse

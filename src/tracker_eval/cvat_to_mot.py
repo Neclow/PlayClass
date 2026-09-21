@@ -6,10 +6,8 @@ track-declaration order, and writes `<video_id>.txt` files in MOTChallenge
 1.1 format. `outside=true` keyframes (bird fully hidden) are dropped.
 
 Usage:
-    pixi run -e tracker-evaluation python -m src.tracker_eval cvat-to-mot \
-        --backup-root ext-data/tracker_benchmark/cvat_backup/playclass-tracker-eval \
-        --out-dir ext-data/tracker_benchmark/ground_truth \
-        [--keyframes-csv data/tracker_eval/annotation_frames.csv]
+    pixi run -e tracker python -m pipeline.eval_tracker_all cvat-to-mot \
+        [--keyframes-csv data/results/eval_tracking/annotation_frames.csv]
 
 If --keyframes-csv is passed, the converter additionally reports which
 scheduled keyframes are missing and which drawn shapes were unscheduled

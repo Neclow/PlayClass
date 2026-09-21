@@ -3,34 +3,10 @@
 For each selected video in ``data/tracker_eval/video_manifest.csv`` (selected=True),
 this script:
 
-1. Loads cached ``yolo_tracking.parquet`` from the YOLO scan run directory
-   pointed to by the manifest's ``scan_dir`` column.
-2. Recomputes per-frame metrics using ``config/tracker.yaml`` defaults (the
-   same parameters used to produce the manuscript's 30-video tracks).
-3. Computes default-parameter adaptive chunk boundaries via
-   ``chunk_video_frames_adaptive`` (chunk_seconds=60, max=120, search=10).
-4. Loads occlusion periods from ``yolo_scan_summary.parquet`` and picks the
-   ``K`` longest per video.
-5. Builds the annotation frame list from three sources:
-   - ``chunk_guided``:          for each internal chunk boundary B, sample B-5, B, B+5.
-   - ``occlusion_bracketing``:  for each of the top-K longest occlusion periods
-                                (start, end), sample start-3, start, mid, end, end+3.
-                                Constrains CVAT linear interpolation through
-                                occlusions where it is otherwise unreliable.
-   - ``uniform``:               one frame every ``UNIFORM_INTERVAL_SECONDS``.
-   Frames are clamped to ``[0, total_frames-1]`` and deduplicated by source
-   priority: chunk_guided > occlusion_bracketing > uniform.
+Output: ``data/results/eval_tracking/annotation_frames.csv`` (video_id, frame_idx, source).
 
-Output: ``data/tracker_eval/annotation_frames.csv`` with columns
-``video_id, frame_idx, source``.
-
-Run from project root::
-
-    pixi run -e tracker python -m src.tracker_eval select-frames
-
-Requires the ``tracker`` pixi env (not ``tracker-evaluation``): the deferred
-imports below pull in ``src.metrics`` and ``src.tracker.*``, which transitively
-require torch.
+Usage:
+    pixi run -e tracker python -m pipeline.eval_tracker_all select-frames
 """
 
 import argparse
@@ -64,8 +40,8 @@ def select_frames_for_video(
 ) -> tuple[list[tuple[int, str]], dict]:
     """Returns (list of (frame_idx, source), info_dict)."""
     from src.metrics import compute_yolo_per_frame_metrics
-    from src.tracker.chunking import chunk_video_frames_adaptive
-    from src.tracker.scan import identify_occlusion_periods
+    from src.tracking.chunking import chunk_video_frames_adaptive
+    from src.tracking.scan import identify_occlusion_periods
 
     yolo_df = pd.read_parquet(scan_dir / "yolo_tracking.parquet")
     summary = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_summary.parquet")

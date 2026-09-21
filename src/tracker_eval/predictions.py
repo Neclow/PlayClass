@@ -90,6 +90,29 @@ def write_rows(out_path: Path, rows: list[str]) -> None:
     out_path.write_text("\n".join(rows) + ("\n" if rows else ""))
 
 
+def _find_run_dir(root: Path, stem: str) -> Path | None:
+    """Find a video's run directory under root, handling day_N/ nesting."""
+    if not root.exists():
+        return None
+    direct = root / stem
+    if direct.exists():
+        return direct
+    for day_dir in sorted(root.glob("day_*")):
+        nested = day_dir / stem
+        if nested.exists():
+            return nested
+    return None
+
+
+def _find_parquet(root: Path, stem: str, filename: str) -> Path | None:
+    """Find a parquet file in a video's run directory."""
+    run_dir = _find_run_dir(root, stem)
+    if run_dir is None:
+        return None
+    pq = run_dir / filename
+    return pq if pq.exists() else None
+
+
 def _convert_sam3_bucket(
     args: argparse.Namespace,
     stem: str,
@@ -105,14 +128,13 @@ def _convert_sam3_bucket(
     """
     root = getattr(args, root_attr)
     out_path = args.out_dir / bucket / f"{video_id}.txt"
-    if root is None or not root.exists():
+    if root is None or not Path(root).exists():
         write_rows(out_path, [])
         return 0
-    run_dir = root / stem
-    pq = run_dir / "tracking_outputs.parquet"
-    if not pq.exists():
+    pq = _find_parquet(Path(root), stem, "tracking_outputs.parquet")
+    if pq is None:
         print(
-            f"  [empty] {video_id}: {bucket} parquet missing at {pq} "
+            f"  [empty] {video_id}: {bucket} parquet missing under {root} "
             f"(writing empty MOT file so the variant is scored)"
         )
         write_rows(out_path, [])
@@ -173,9 +195,12 @@ def run(args: argparse.Namespace) -> None:
 
     summary = []
     for stem, video_id in sorted(stem_to_video.items(), key=lambda kv: kv[1]):
-        run_dir = args.predictions_root / stem
-        if not run_dir.exists():
-            print(f"  [WARN] {video_id}: adaptive run dir missing at {run_dir}; skipping")
+        root = Path(args.predictions_root)
+        run_dir = _find_run_dir(root, stem)
+        if run_dir is None:
+            print(
+                f"  [WARN] {video_id}: run dir missing under {root}; skipping"
+            )
             continue
 
         yolo_pq = run_dir / "yolo_tracking.parquet"
@@ -187,7 +212,7 @@ def run(args: argparse.Namespace) -> None:
         write_rows(args.out_dir / "E_sam3_adaptive" / f"{video_id}.txt", e_rows)
 
         # A1: YOLO + BoT-SORT with re-ID
-        a1_pq = _find_yolo_parquet(TRACKER_RUNS_YOLO_BOTSORT_REID_ON, stem)
+        a1_pq = _find_parquet(Path(TRACKER_RUNS_YOLO_BOTSORT_REID_ON), stem, "yolo_tracking.parquet")
         a1_rows = yolo_to_mot_rows(a1_pq) if a1_pq is not None else []
         if a1_pq is None:
             print(
