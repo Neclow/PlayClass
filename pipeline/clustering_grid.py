@@ -1,23 +1,48 @@
-"""k × solver silhouette grid over four imputation/PCA variants.
+"""k x solver silhouette grid for the dropna variant.
 
-Writes grid CSVs, scaled arrays, and labels to data/results/clustering/.
+Writes the grid CSV and scaled array to the clustering output directory.
 Run once per dataset release; the figure notebook reads the outputs.
 
-    pixi run -e classifier python -m script.clustering_grid
+    pixi run -e classifier python -m pipeline.clustering_grid
 """
 
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
+
 from sklearn.preprocessing import StandardScaler
 
-from src.cluster import CLUSTERERS, ablate_k
+from src._config import (
+    DEFAULT_CLUSTERING_DIR,
+    DEFAULT_DATASET_DIR,
+    K_RANGE,
+    RANDOM_SEED,
+)
+from src.clustering import CLUSTERERS, ablate_k
 
-K_RANGE = range(2, 13)
-RANDOM_SEED = 42
-OUT = Path("data/results/clustering")
+KEY = ["video_id", "bird_id", "window"]
+
+
+def parse_args():
+    parser = ArgumentParser(
+        description="k x solver silhouette grid for the dropna variant.",
+        formatter_class=ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--dataset-dir",
+        type=Path,
+        default=DEFAULT_DATASET_DIR,
+        help="Directory containing labels.parquet and features_windowed.parquet.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DEFAULT_CLUSTERING_DIR,
+        help="Directory to write grid CSV and scaled array.",
+    )
+    return parser.parse_args()
 
 
 def grid_search(X):
@@ -48,63 +73,36 @@ def grid_search(X):
 
 
 def main():
-    OUT.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    out = args.output_dir
+    out.mkdir(parents=True, exist_ok=True)
 
-    KEY = ["video_id", "bird_id", "window"]
-    lab = pd.read_parquet("data/dataset/labels.parquet", columns=KEY + ["behav_label"])
+    lab = pd.read_parquet(
+        args.dataset_dir / "labels.parquet", columns=KEY + ["behav_label"]
+    )
     lab = lab[lab.behav_label != "social"].reset_index(drop=True)
 
     fw = lab.merge(
-        pd.read_parquet("data/dataset/features_windowed.parquet"), on=KEY, how="left"
+        pd.read_parquet(args.dataset_dir / "features_windowed.parquet"),
+        on=KEY,
+        how="left",
     )
     feat_cols = [c for c in fw.columns if c not in {*KEY, "behav_label", "n_frames"}]
 
     X = fw[feat_cols].astype(float)
-    y = lab.behav_label.to_numpy()
-    print(f"X: {X.shape}, y: {y.shape}\n")
+    print(f"X: {X.shape}\n")
 
-    X_dropna = X.dropna()
-    Z_dropna = StandardScaler().fit_transform(X_dropna)
-    Z_dropna_pca = PCA(50).fit_transform(Z_dropna)
+    Z_dropna = StandardScaler().fit_transform(X.dropna())
+    print(f"dropna: {Z_dropna.shape[0]} rows\n")
 
-    X_fillna_median = X.fillna(X.median())
-    Z_fillna_median = StandardScaler().fit_transform(X_fillna_median)
-    Z_fillna_median_pca = PCA(50).fit_transform(Z_fillna_median)
+    np.save(out / "Z_dropna.npy", Z_dropna)
+    print(f"Saved Z_dropna.npy to {out}/\n")
 
-    print(f"dropna:        {X_dropna.shape[0]} rows -> PCA {Z_dropna_pca.shape}")
-    print(
-        f"fillna_median: {X_fillna_median.shape[0]} rows -> PCA {Z_fillna_median_pca.shape}\n"
-    )
-
-    np.save(OUT / "Z_dropna.npy", Z_dropna)
-    np.save(OUT / "Z_dropna_pca.npy", Z_dropna_pca)
-    np.save(OUT / "Z_fillna_median.npy", Z_fillna_median)
-    np.save(OUT / "Z_fillna_median_pca.npy", Z_fillna_median_pca)
-    np.save(OUT / "y.npy", y)
-    print(f"Saved scaled arrays to {OUT}/\n")
-
-    datasets = {
-        "dropna": Z_dropna,
-        "dropna_pca": Z_dropna_pca,
-        "fillna_median": Z_fillna_median,
-        "fillna_median_pca": Z_fillna_median_pca,
-    }
-
-    results = {}
-    for name, data in datasets.items():
-        print(f"{'=' * 60}\n  {name}  ({data.shape})\n{'=' * 60}\n")
-        grid, best_solver = grid_search(data)
-        grid.to_csv(OUT / f"grid_{name}.csv", index=False)
-        results[name] = best_solver
-
-    print(f"\n{'=' * 60}\n  Summary\n{'=' * 60}")
-    for name, best in results.items():
-        print(f"  {name:25s} -> {best}")
-
-    pd.DataFrame([{"variant": k, "best_solver": v} for k, v in results.items()]).to_csv(
-        OUT / "summary.csv", index=False
-    )
-    print(f"\nAll results saved to {OUT}/")
+    print(f"{'=' * 60}\n  dropna  ({Z_dropna.shape})\n{'=' * 60}\n")
+    grid, best_solver = grid_search(Z_dropna)
+    grid.to_csv(out / "grid_dropna.csv", index=False)
+    print(f"Best solver: {best_solver}")
+    print(f"\nAll results saved to {out}/")
 
 
 if __name__ == "__main__":

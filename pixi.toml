@@ -37,6 +37,8 @@ viz_tracking = "python -m pipeline.viz_tracking"
 # Embedding extraction
 extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
 extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
+# Clustering
+clustering_grid = "python -m pipeline.clustering_grid"
 # Testing
 test_features = "python -m pytest tests/test_features.py -v"
 test_labels = "python -m pytest tests/test_labels.py -v"
@@ -68,6 +70,7 @@ torchcodec = "==0.9"
 torch = "==2.9.1+cu126"
 torchvision = "==0.24.1+cu126"
 lightning = ">=2.5"
+kmedoids = ">=0.5.5,<0.6"
 
 [pypi-options]
 extra-index-urls = ["https://download.pytorch.org/whl/cu126"]
