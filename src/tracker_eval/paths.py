@@ -1,10 +1,9 @@
 """Single source of truth for all paths used by the tracker-eval pipeline.
 
 Data-side paths host small, version-controlled artefacts (manifests,
-keyframe schedules, per-variant YAML configs under `data/tracker_eval/config/`,
-results CSVs). Ext-data-side paths host heavy artefacts (CVAT Backup,
-tracker run parquets, source MP4 clips, MOT files) — symlinked at
-`ext-data/`; a regular directory on local dev.
+keyframe schedules, results CSVs) under `data/results/eval_tracking/`.
+Heavy artefacts (CVAT Backup, tracker run parquets, source MP4 clips,
+MOT files) live under `data/results/eval_tracking/tracker_benchmark/`.
 
 Each subcommand's CLI accepts `--manifest` / `--out` / `--predictions-root`
 overrides; these constants supply the defaults.

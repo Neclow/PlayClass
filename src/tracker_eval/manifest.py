@@ -27,7 +27,7 @@ selected videos come from day 28. The joint cross-day ranking has
 historically produced 2 day-28 picks without forcing.
 
 Scan-dir discovery walks `--scan-runs-root` (default
-`ext-data/output/results/sam3-hf`) for `{YYYYMMDD_HHMMSS}_sam3_hf/{stem}/`
+`data/results/tracking/sam3_best`) for `{YYYYMMDD_HHMMSS}_sam3_hf/{stem}/`
 directories containing `yolo_tracking.parquet`. When the same video stem
 appears in multiple timestamped runs, the lexicographically latest run is
 used (timestamp prefix orders correctly).

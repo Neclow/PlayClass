@@ -43,10 +43,8 @@ library modules.
 ```
 data/
   labels/          Registration protocol Excel files (behaviour labels + bird info)
-  tracking/        Symlinks to tracking run output dirs (gitignored)
   postprocessing/  Version-controlled per-video postprocessing JSONs + parquets (day_28/, day_29/)
-  tracker_eval/    Version-controlled tracker benchmark artefacts (video manifest, keyframes, ablation configs, scored results)
-ext-data/          Symlink to large data outputs (results, image sequences, embeddings, etc.)
+  results/         Pipeline outputs: tracking, classification, clustering
 ```
 
 | Stage                                          | Docs                                                 | Environment             |
