@@ -67,7 +67,7 @@ data/
 
 ```sh
 # 1. Labels, postprocessing, windows (fast, ~seconds)
-pixi run python -m pipeline.build_dataset
+pixi run build_dataset
 
 pixi run test_features                    # Feature extraction unit tests (pytest)
 pixi run test_postprocessing              # Postprocessing logic unit tests (pytest)

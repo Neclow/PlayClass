@@ -37,6 +37,9 @@ viz_tracking = "python -m pipeline.viz_tracking"
 # Embedding extraction
 extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
 extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
+# Feature extraction
+build_dataset = "python -m pipeline.build_dataset"
+extract_features = "python -m pipeline.extract_features"
 # Clustering
 clustering_grid = "python -m pipeline.clustering_grid"
 # Classification
