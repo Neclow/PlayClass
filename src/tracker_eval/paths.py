@@ -12,7 +12,7 @@ overrides; these constants supply the defaults.
 from pathlib import Path
 from typing import Final
 
-from src._config import DEFAULT_RESULTS_DIR, DEFAULT_TRACKING_DIR
+from src._config import DEFAULT_RESULTS_DIR, DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
 
 ROOT: Final = Path(__file__).resolve().parents[2]
 
@@ -28,6 +28,9 @@ GROUND_TRUTH_DIR: Final = f"{BENCHMARK_DIR}/ground_truth"
 PREDICTIONS_MOT_DIR: Final = f"{BENCHMARK_DIR}/predictions_mot"
 
 TRACKEVAL_DIR: Final = "ext/TrackEval"
+
+SCAN_RUNS_ROOT: Final = f"{DEFAULT_TRACKING_DIR}/sam3_best"
+RAW_VIDEO_ROOT: Final = DEFAULT_VIDEO_DIR
 
 DEFAULT_TRACKER_CONFIG: Final = "config/sam3_best.yaml"
 

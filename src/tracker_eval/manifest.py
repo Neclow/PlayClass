@@ -102,10 +102,14 @@ def discover_scan_dirs(scan_runs_root: Path) -> dict[str, Path]:
 
 def compute_difficulty_proxies(scan_dir: Path) -> dict[str, float]:
     pf = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_metrics.parquet")
-    summary = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_summary.parquet").iloc[0]
+    summary = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_summary.parquet").iloc[
+        0
+    ]
     duration_min = float(summary["video_duration_seconds"]) / 60.0
 
-    finite_mcd = pf.loc[pf["mean_centroid_distance"] != float("inf"), "mean_centroid_distance"]
+    finite_mcd = pf.loc[
+        pf["mean_centroid_distance"] != float("inf"), "mean_centroid_distance"
+    ]
     return {
         "frac_high_occlusion": float(pf["is_high_occlusion"].mean()),
         "mean_overlapping_pairs": float(pf["num_overlapping_pairs"].mean()),
