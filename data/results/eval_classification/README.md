@@ -52,5 +52,5 @@ Each timestamped subdirectory contains a single training run:
 ## Reproducing
 
 ```sh
-pixi run -e classifier python -m pipeline.eval_classification tables
+pixi run eval_classification tables
 ```
