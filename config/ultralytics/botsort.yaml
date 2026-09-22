@@ -5,6 +5,7 @@
 #   - Stationary camera (570x570 resolution)
 #   - YOLO26x detector
 # Docs: https://docs.ultralytics.com/modes/track/
+# Adapted from https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/trackers/botsort.yaml
 
 tracker_type: botsort
 

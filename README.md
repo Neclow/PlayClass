@@ -33,7 +33,7 @@ pixi install
 Pixi environments: `default` (base), `tracker` (SAM3), `dataset` (build + features), `embeddings` (DINOv3/V-JEPA), `classifier` (training), `videoprism` (JAX), `gs2` (Grounded-SAM-2; used for tracker benchmarking), `tracker-evaluation` (CPU-only tracker scoring; motmetrics + pycocotools). Platform is Linux-only (CUDA 12.6).
 
 All commands use [pixi](https://pixi.sh) task definitions from `pixi.toml`.
-Scripts in `script/` are the executables; `src/` holds reusable library modules.
+Scripts in `script/` and `pipeline/` are the executables; `src/` holds reusable library modules.
 
 ```
 data/
