@@ -1,0 +1,33 @@
+# YOLO + BoT-SORT tracker with ReID (Variant A1).
+#
+# Runs YOLO inference + BoT-SORT tracking (ReID enabled) and exits without loading SAM3.
+
+# =============================================================================
+# INPUT / OUTPUT
+# =============================================================================
+text_prompt: "bird"
+start_frame: 0
+max_frames_to_track: 0
+
+# =============================================================================
+# CHUNKING
+# =============================================================================
+yolo_scan_only: true
+use_adaptive_chunking: true
+chunk_seconds: 60
+adaptive_max_chunk_seconds: 120
+adaptive_search_window_seconds: 10.0
+
+# =============================================================================
+# YOLO SCAN
+# =============================================================================
+yolo_scan:
+  model: "model/yolo26x.pt"
+  conf_thresh: 0.25
+  iou_thresh: 0.45
+  tracker_config: "config/ultralytics/botsort_reid_on.yaml"
+  allowed_classes: ["bird"]
+  separation_min_objects: 3
+  occlusion_iou_threshold: 0.07
+  separation_min_distance: 0.10
+  clustering_distance_threshold: 0.15

@@ -10,34 +10,39 @@ Each subcommand's CLI accepts `--manifest` / `--out` / `--predictions-root`
 overrides; these constants supply the defaults.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
+from typing import Final
 
-ROOT = Path(__file__).resolve().parents[2]
-EXT_DATA = ROOT / "ext-data"
+from src._config import DEFAULT_RESULTS_DIR, DEFAULT_TRACKING_DIR
 
-# Data-side (version-controlled, small)
-DATA_DIR = ROOT / "data" / "tracker_eval"
-MANIFEST_CSV = DATA_DIR / "video_manifest.csv"
-ANNOTATION_FRAMES = DATA_DIR / "annotation_frames.csv"
-ANNOTATION_SUMMARY = DATA_DIR / "annotation_frames_summary.csv"
-RESULTS_DIR = DATA_DIR / "results"
-TRACKER_CONFIG = ROOT / "config" / "tracker.yaml"
-TRACKEVAL_DIR = ROOT / "ext" / "TrackEval"
+ROOT: Final = Path(__file__).resolve().parents[2]
 
-# Ext-data side (heavy, on ext-data symlink)
-BENCHMARK_DIR = EXT_DATA / "tracker_benchmark"
-CVAT_BACKUP_DIR = BENCHMARK_DIR / "cvat_backup" / "playclass-tracker-eval"
-TRACKER_RUNS_ADAPTIVE = BENCHMARK_DIR / "tracker_outputs_adaptive"
-TRACKER_RUNS_FIXED = BENCHMARK_DIR / "tracker_outputs_fixed"
-TRACKER_RUNS_GS2 = BENCHMARK_DIR / "tracker_outputs_gs2"
-TRACKER_RUNS_GS2_STRICT = BENCHMARK_DIR / "tracker_outputs_gs2_strict"
-TRACKER_RUNS_FRAME_ZERO = BENCHMARK_DIR / "tracker_outputs_sam3_frame_zero"
-SOURCE_VIDEOS_DIR = BENCHMARK_DIR / "source_videos"
-GROUND_TRUTH_DIR = BENCHMARK_DIR / "ground_truth"
-PREDICTIONS_MOT_DIR = BENCHMARK_DIR / "predictions_mot"
+EVAL_TRACKING_DIR: Final = f"{DEFAULT_RESULTS_DIR}/eval_tracking"
 
-# Scan inputs (already on ext-data)
-SCAN_RUNS_ROOT = EXT_DATA / "output" / "results" / "sam3-hf"
-RAW_VIDEO_ROOT = EXT_DATA / "raw"
+MANIFEST_CSV: Final = f"{EVAL_TRACKING_DIR}/video_manifest.csv"
+ANNOTATION_FRAMES: Final = f"{EVAL_TRACKING_DIR}/annotation_frames.csv"
+RESULTS_DIR: Final = f"{EVAL_TRACKING_DIR}/results"
+
+BENCHMARK_DIR: Final = f"{EVAL_TRACKING_DIR}/tracker_benchmark"
+CVAT_BACKUP_DIR: Final = f"{BENCHMARK_DIR}/cvat_backup/playclass-tracker-eval"
+GROUND_TRUTH_DIR: Final = f"{BENCHMARK_DIR}/ground_truth"
+PREDICTIONS_MOT_DIR: Final = f"{BENCHMARK_DIR}/predictions_mot"
+
+TRACKEVAL_DIR: Final = "ext/TrackEval"
+
+DEFAULT_TRACKER_CONFIG: Final = "config/sam3_best.yaml"
+
+# Per-variant tracker run directories (keyed by config stem)
+TRACKER_RUNS_SAM3_BEST: Final = f"{DEFAULT_TRACKING_DIR}/sam3_best"
+TRACKER_RUNS_SAM3_ADAPTIVE_GROUNDING: Final = (
+    f"{DEFAULT_TRACKING_DIR}/sam3_adaptive_grounding"
+)
+TRACKER_RUNS_SAM3_BASELINE: Final = f"{DEFAULT_TRACKING_DIR}/sam3_baseline"
+TRACKER_RUNS_GS2_BASELINE: Final = f"{DEFAULT_TRACKING_DIR}/gs2_baseline"
+TRACKER_RUNS_GS2_ADAPTIVE_RECOVERY: Final = (
+    f"{DEFAULT_TRACKING_DIR}/gs2_adaptive_recovery"
+)
+TRACKER_RUNS_YOLO_BOTSORT: Final = f"{DEFAULT_TRACKING_DIR}/yolo_botsort"
+TRACKER_RUNS_YOLO_BOTSORT_REID_ON: Final = (
+    f"{DEFAULT_TRACKING_DIR}/yolo_botsort_reid_on"
+)

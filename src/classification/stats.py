@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
 from loguru import logger
 
 
@@ -15,7 +16,10 @@ def format_confusion_matrix(cm: np.ndarray, labels: list[str]) -> str:
 
 
 def aggregate_scalars(
-    fold_results: list[dict], scalar_keys: list[str], run_dir: Path, prefix: str = "lovo"
+    fold_results: list[dict],
+    scalar_keys: list[str],
+    run_dir: Path,
+    prefix: str = "loco",
 ):
     """Build summary CSV with MEAN/STD rows and log per-metric stats."""
     rows = [{k: r[k] for k in scalar_keys} for r in fold_results]
@@ -54,14 +58,61 @@ def _macro_f1_from_cm(cm: np.ndarray) -> float:
     return np.mean(f1s)
 
 
+def _save_per_fold_cms(
+    fold_results: list[dict],
+    key: str,
+    run_dir: Path,
+    prefix: str,
+):
+    """Stack per-fold confusion matrices and save as ``{prefix}_{key}s.npy``."""
+    stacked = np.stack([r[key] for r in fold_results])
+    out_path = run_dir / f"{prefix}_{key}s.npy"
+    np.save(out_path, stacked)
+    logger.info(f"Per-fold {key}s saved to {out_path} — shape {stacked.shape}")
+
+
+def _save_recall_txt(
+    fold_results: list[dict],
+    key: str,
+    run_dir: Path,
+    labels: list[str],
+    prefix: str,
+):
+    """Derive per-fold per-class recall from CMs and save as a text table."""
+    n_folds = len(fold_results)
+    recalls = {c: np.zeros(n_folds) for c in labels}
+    for i, r in enumerate(fold_results):
+        cm = r[key]
+        for j, c in enumerate(labels):
+            row_sum = cm[j].sum()
+            recalls[c][i] = cm[j, j] / row_sum if row_sum > 0 else 0.0
+
+    header = f"{'fold':<8s}" + "".join(f"{c:>14s}" for c in labels)
+    lines = [header]
+    for i in range(n_folds):
+        lines.append(
+            f"{'fold_' + str(i):<8s}" + "".join(f"{recalls[c][i]:>14.4f}" for c in labels)
+        )
+    lines.append(f"{'MEAN':<8s}" + "".join(f"{recalls[c].mean():>14.4f}" for c in labels))
+    lines.append(f"{'STD':<8s}" + "".join(f"{recalls[c].std():>14.4f}" for c in labels))
+
+    split = key.replace("_confusion_matrix", "")
+    out_path = run_dir / f"{prefix}_{split}_recall.txt"
+    out_path.write_text("\n".join(lines) + "\n")
+    logger.info(f"Per-fold recall saved to {out_path}")
+
+
 def aggregate_confusion_matrices(
     fold_results: list[dict],
     cm_keys: list[str],
     run_dir: Path,
     labels: list[str],
-    prefix: str = "lovo",
+    prefix: str = "loco",
 ) -> dict[str, float]:
     """Sum and write confusion matrices across folds.
+
+    Also saves per-fold CM stacks (``*_confusion_matrixs.npy``) and per-fold
+    recall tables (``*_recall.txt``) for test splits.
 
     Returns pooled macro F1 per split, e.g. ``{"test_macro_f1": 0.74, ...}``.
     """
@@ -77,6 +128,11 @@ def aggregate_confusion_matrices(
         cm_path = run_dir / f"{prefix}_{key}.txt"
         cm_path.write_text(f"# Summed {key} (rows=true, cols=predicted):\n{cm_text}\n")
         logger.info(f"Summed {key} saved to {cm_path}")
+
+        # Per-fold CMs and recall for test splits
+        if "test" in key:
+            _save_per_fold_cms(fold_results, key, run_dir, prefix)
+            _save_recall_txt(fold_results, key, run_dir, labels, prefix)
 
         # Compute pooled F1 from summed CM
         macro_f1 = _macro_f1_from_cm(summed_cm)

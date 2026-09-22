@@ -70,7 +70,7 @@ class BehaviourDataset(Dataset):
     use_features : bool
         Load handcrafted features from ``features_windowed.parquet``.
     use_embeddings : bool
-        Load embeddings from ``embeddings.pt``.
+        Load embeddings from an ``embeddings_*.pt`` file.
     temporal : bool
         If True, keep embeddings as sequences for temporal models.
         If False, mean-pool to ``(D,)``.
@@ -89,7 +89,7 @@ class BehaviourDataset(Dataset):
         temporal=False,
         n_segments=12,
         exclude=None,
-        embeddings_file="embeddings.pt",
+        embeddings_file="embeddings_dinov3_vitl.pt",
         embeddings_files=None,
     ):
         dataset_dir = Path(dataset_dir)
@@ -307,7 +307,7 @@ class BehaviourDataModule(L.LightningDataModule):
         temporal=False,
         n_segments=12,
         exclude=None,
-        embeddings_file="embeddings.pt",
+        embeddings_file="embeddings_dinov3_vitl.pt",
         embeddings_files=None,
     ):
         super().__init__()

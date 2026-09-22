@@ -3,11 +3,7 @@
 Loads the SAM3 video model, runs text-prompted tracking on a short clip,
 and verifies that per-frame outputs are produced with expected structure.
 Requires CUDA and the test video at
-``ext-data/raw/C5G2_Test_1_day_28_1_Camera_5_2025_02_04_11_35_00_2.mp4``.
-
-Usage::
-
-    CUDA_VISIBLE_DEVICES=1 pixi run -e tracker pytest tests/test_tracker.py -v
+``data/videos/C5G2_Test_1_day_28_1_Camera_5_2025_02_04_11_35_00_2.mp4``.
 """
 
 from pathlib import Path
@@ -15,7 +11,10 @@ from pathlib import Path
 import pytest
 import torch
 
-from src.io import load_video_frames_torchcodec as load_video_frames
+from PIL import Image
+
+from src.utils.io import load_video_frames_torchcodec as load_video_frames
+from src.tracking.viz import overlay_masks
 
 TEXT = "bird"
 START_IDX = 10
@@ -136,9 +135,9 @@ class TestSam3VideoInference:
         first_ids = set(outputs_per_frame[sorted_frames[0]]["object_ids"].tolist())
         for frame_idx in sorted_frames[1:]:
             frame_ids = set(outputs_per_frame[frame_idx]["object_ids"].tolist())
-            assert first_ids.issubset(frame_ids), (
-                f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
-            )
+            assert first_ids.issubset(
+                frame_ids
+            ), f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
 
     def test_output_keys(self, outputs_per_frame):
         """Each frame output should contain expected keys."""
@@ -150,10 +149,6 @@ class TestSam3VideoInference:
 class TestSam3VideoOverlay:
     def test_overlay_masks(self, video_frames, outputs_per_frame):
         """overlay_masks should return an RGBA image matching frame dimensions."""
-        from PIL import Image
-
-        from src.viz import overlay_masks
-
         frame_image = Image.fromarray(video_frames[0]).convert("RGB")
         result = overlay_masks(frame_image, outputs_per_frame[0]["masks"])
         assert result.mode == "RGBA"

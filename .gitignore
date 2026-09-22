@@ -56,17 +56,18 @@ __marimo__/
 # Models
 model/
 
-# Data
+# Research data: keep only documentation and manual corrections.
+data/**
+!data/**/
+!data/**/README.md
+!data/postprocessing/*/*/tracking_postprocessing.json
+
+# Legacy / removed
 ext/
 ext-data
 video-data/
-ext-data/
-data/eval/
-data/video/
-data/dataset/
-data/tsne/
-tracking/
 .dvc/
+config/tracker_eval
 
 # Notes & drafts
 tmp/
@@ -76,13 +77,13 @@ notes/
 paper/
 papers/
 scrapbook/
+pixi.toml.bak
 
 # Shelved experiments
 shelf/
 sandbox/
 
 # Generated / local-only
-.matplotlib/
 img/
 
 # AGENTS
@@ -90,3 +91,10 @@ img/
 !.claude/rules/ # ignore settings but track rules
 .agents/
 agent-log/
+
+# Zenodo data prep
+scripts/prepare_zenodo.sh
+playclass_data.tar.gz
+
+# Precommit stuff
+node_modules/

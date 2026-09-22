@@ -1,8 +1,11 @@
+# pylint: disable=redefined-outer-name
+
 """Tests for the tracking postprocessing pipeline."""
 
 import pandas as pd
 import pytest
 
+from src._config import DEFAULT_FPS as FPS
 from src.dataset.tracking_postprocessing import (
     align_labels,
     assign_windows,
@@ -13,8 +16,6 @@ from src.dataset.tracking_postprocessing import (
     process_tracks,
     trim,
 )
-
-FPS = 25.0
 
 
 @pytest.fixture
@@ -91,8 +92,10 @@ class TestTrim:
         assert len(id2_after) == 19  # frames 81..99
 
         # Other IDs untouched everywhere
+        # pylint: disable=unused-variable
         for oid in [0, 1]:
             assert len(result.query("tracking_id == @oid")) == 100
+        # pylint: enable=unused-variable
 
         # ID-scoped trim must NOT drop labels
         assert len(labels_out) == len(dummy_labels)
@@ -418,7 +421,7 @@ class TestAssignWindows:
             }
         )
 
-        tracks_out, labels_out = assign_windows(tracks, labels, FPS_LOOKUP)
+        tracks_out, _ = assign_windows(tracks, labels, FPS_LOOKUP)
 
         # Frames 0–125 (time 0.0–5.0s) → window 0
         w0 = tracks_out.query("window == 0")
@@ -529,9 +532,7 @@ class TestFilterIncompleteWindowsMaxCoverage:
             }
         )
 
-        tracks_out, labels_out = filter_incomplete_windows(
-            tracks, labels, FPS_LOOKUP
-        )
+        tracks_out, labels_out = filter_incomplete_windows(tracks, labels, FPS_LOOKUP)
 
         assert set(tracks_out["window"].unique()) == {0}
         assert set(labels_out["window"].unique()) == {0}
@@ -555,9 +556,7 @@ class TestFilterIncompleteWindowsMaxCoverage:
             }
         )
 
-        tracks_out, labels_out = filter_incomplete_windows(
-            tracks, labels, FPS_LOOKUP
-        )
+        tracks_out, labels_out = filter_incomplete_windows(tracks, labels, FPS_LOOKUP)
 
         assert len(tracks_out) == 125
         assert len(labels_out) == 1

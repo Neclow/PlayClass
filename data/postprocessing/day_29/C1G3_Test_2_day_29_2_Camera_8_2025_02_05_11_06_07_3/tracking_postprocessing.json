@@ -56,7 +56,7 @@
     "to": 0
   },
   {    
-    "type": "merged_object",
+    "type": "trim",
     "cause": "overlap",
     "from": 4777,
     "to": 4777,

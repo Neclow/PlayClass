@@ -20,9 +20,8 @@ dense (every predicted frame); motmetrics / TrackEval restrict scoring
 to GT-present frames at evaluation time, so we do not filter here.
 """
 
-from __future__ import annotations
-
 import argparse
+
 from pathlib import Path
 
 import pandas as pd
@@ -30,11 +29,12 @@ import pandas as pd
 from .paths import (
     MANIFEST_CSV,
     PREDICTIONS_MOT_DIR,
-    TRACKER_RUNS_ADAPTIVE,
-    TRACKER_RUNS_FIXED,
-    TRACKER_RUNS_FRAME_ZERO,
-    TRACKER_RUNS_GS2,
-    TRACKER_RUNS_GS2_STRICT,
+    TRACKER_RUNS_GS2_ADAPTIVE_RECOVERY,
+    TRACKER_RUNS_GS2_BASELINE,
+    TRACKER_RUNS_SAM3_ADAPTIVE_GROUNDING,
+    TRACKER_RUNS_SAM3_BASELINE,
+    TRACKER_RUNS_SAM3_BEST,
+    TRACKER_RUNS_YOLO_BOTSORT_REID_ON,
 )
 
 
@@ -90,6 +90,29 @@ def write_rows(out_path: Path, rows: list[str]) -> None:
     out_path.write_text("\n".join(rows) + ("\n" if rows else ""))
 
 
+def _find_run_dir(root: Path, stem: str) -> Path | None:
+    """Find a video's run directory under root, handling day_N/ nesting."""
+    if not root.exists():
+        return None
+    direct = root / stem
+    if direct.exists():
+        return direct
+    for day_dir in sorted(root.glob("day_*")):
+        nested = day_dir / stem
+        if nested.exists():
+            return nested
+    return None
+
+
+def _find_parquet(root: Path, stem: str, filename: str) -> Path | None:
+    """Find a parquet file in a video's run directory."""
+    run_dir = _find_run_dir(root, stem)
+    if run_dir is None:
+        return None
+    pq = run_dir / filename
+    return pq if pq.exists() else None
+
+
 def _convert_sam3_bucket(
     args: argparse.Namespace,
     stem: str,
@@ -105,14 +128,13 @@ def _convert_sam3_bucket(
     """
     root = getattr(args, root_attr)
     out_path = args.out_dir / bucket / f"{video_id}.txt"
-    if root is None or not root.exists():
+    if root is None or not Path(root).exists():
         write_rows(out_path, [])
         return 0
-    run_dir = root / stem
-    pq = run_dir / "tracking_outputs.parquet"
-    if not pq.exists():
+    pq = _find_parquet(Path(root), stem, "tracking_outputs.parquet")
+    if pq is None:
         print(
-            f"  [empty] {video_id}: {bucket} parquet missing at {pq} "
+            f"  [empty] {video_id}: {bucket} parquet missing under {root} "
             f"(writing empty MOT file so the variant is scored)"
         )
         write_rows(out_path, [])
@@ -126,32 +148,32 @@ def _add_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--predictions-root",
         type=Path,
-        default=TRACKER_RUNS_ADAPTIVE,
-        help="Adaptive SAM 3 + YOLO scan run dir (supplies A_yolo_botsort and E_sam3_adaptive).",
+        default=TRACKER_RUNS_SAM3_BEST,
+        help="SAM3 best run dir (supplies A_yolo_botsort and E_sam3_adaptive).",
     )
     parser.add_argument(
         "--predictions-root-fixed",
         type=Path,
-        default=TRACKER_RUNS_FIXED,
-        help="Fixed-chunking SAM 3 run dir (supplies D_sam3_fixed). Skipped if dir is missing or empty.",
+        default=TRACKER_RUNS_SAM3_ADAPTIVE_GROUNDING,
+        help="SAM3 adaptive-grounding run dir (supplies D_sam3_fixed).",
     )
     parser.add_argument(
         "--predictions-root-frame-zero",
         type=Path,
-        default=TRACKER_RUNS_FRAME_ZERO,
-        help="SAM 3 frame-zero run dir (supplies C_sam3_frame_zero). Skipped if dir is missing or empty.",
+        default=TRACKER_RUNS_SAM3_BASELINE,
+        help="SAM3 baseline run dir (supplies C_sam3_frame_zero).",
     )
     parser.add_argument(
         "--predictions-root-gs2",
         type=Path,
-        default=TRACKER_RUNS_GS2,
-        help="Grounded-SAM-2 parity-recovery run dir (supplies B_gs2_fixed). Skipped if dir is missing or empty.",
+        default=TRACKER_RUNS_GS2_ADAPTIVE_RECOVERY,
+        help="GS2 adaptive-recovery run dir (supplies B_gs2_fixed).",
     )
     parser.add_argument(
         "--predictions-root-gs2-strict",
         type=Path,
-        default=TRACKER_RUNS_GS2_STRICT,
-        help="Grounded-SAM-2 strict run dir (supplies B_gs2_strict). Skipped if dir is missing or empty.",
+        default=TRACKER_RUNS_GS2_BASELINE,
+        help="GS2 baseline run dir (supplies B_gs2_strict).",
     )
     parser.add_argument("--manifest", type=Path, default=MANIFEST_CSV)
     parser.add_argument("--out-dir", type=Path, default=PREDICTIONS_MOT_DIR)
@@ -173,9 +195,12 @@ def run(args: argparse.Namespace) -> None:
 
     summary = []
     for stem, video_id in sorted(stem_to_video.items(), key=lambda kv: kv[1]):
-        run_dir = args.predictions_root / stem
-        if not run_dir.exists():
-            print(f"  [WARN] {video_id}: adaptive run dir missing at {run_dir}; skipping")
+        root = Path(args.predictions_root)
+        run_dir = _find_run_dir(root, stem)
+        if run_dir is None:
+            print(
+                f"  [WARN] {video_id}: run dir missing under {root}; skipping"
+            )
             continue
 
         yolo_pq = run_dir / "yolo_tracking.parquet"
@@ -185,6 +210,16 @@ def run(args: argparse.Namespace) -> None:
         e_rows = sam3_to_mot_rows(sam3_adaptive_pq) if sam3_adaptive_pq.exists() else []
         write_rows(args.out_dir / "A_yolo_botsort" / f"{video_id}.txt", a_rows)
         write_rows(args.out_dir / "E_sam3_adaptive" / f"{video_id}.txt", e_rows)
+
+        # A1: YOLO + BoT-SORT with re-ID
+        a1_pq = _find_parquet(Path(TRACKER_RUNS_YOLO_BOTSORT_REID_ON), stem, "yolo_tracking.parquet")
+        a1_rows = yolo_to_mot_rows(a1_pq) if a1_pq is not None else []
+        if a1_pq is None:
+            print(
+                f"  [empty] {video_id}: A1_yolo_botsort_reid parquet missing "
+                f"(writing empty MOT file so the variant is scored)"
+            )
+        write_rows(args.out_dir / "A1_yolo_botsort_reid" / f"{video_id}.txt", a1_rows)
 
         n_b_strict = _convert_sam3_bucket(
             args, stem, video_id, "predictions_root_gs2_strict", "B_gs2_strict"

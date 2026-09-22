@@ -1,0 +1,8 @@
+# Videos selected for tracker evaluation benchmark (one stem per line).
+# These are the hardest-ranked group per cage, chosen via the manifest's
+# difficulty score.  See data/results/eval_tracking/video_manifest.csv.
+C1G2_Test_2_day_29_2_Camera_5_2025_02_05_11_06_07_2
+C2G2_Test_1_day_28_1_Camera_5_2025_02_04_09_43_25_2
+C3G2_Test_2_day_29_2_Camera_5_2025_02_05_09_22_32_2
+C4G2_Test_2_day_29_2_Camera_5_2025_02_05_10_31_53_2
+C5G3_Test_1_day_28_1_Camera_8_2025_02_04_11_35_00_3

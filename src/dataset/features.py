@@ -520,7 +520,7 @@ def bin_features_per_window(
 ) -> dict[tuple, "torch.Tensor"]:
     """Convert per-frame features into per-window tensors for temporal models.
 
-    Same output format as ``embeddings.pt``: dict keyed by
+    Same output format as ``embeddings_*.pt``: dict keyed by
     ``(video_id, bird_id, window)`` with ``Tensor(T, D)`` values,
     where T is the number of frames in that window and D is ``len(_FEATURE_COLS)``.
 

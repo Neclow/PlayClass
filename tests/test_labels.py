@@ -35,9 +35,9 @@ def test_bird_info_n_birds(parsed_labels):
     _, bird_info = parsed_labels
     assert bird_info, "bird_info is empty"
     for video_id, birds in bird_info.items():
-        assert len(birds) == DEFAULT_N_BIRDS, (
-            f"{video_id}: expected {DEFAULT_N_BIRDS} birds, got {len(birds)} — {birds}"
-        )
+        assert (
+            len(birds) == DEFAULT_N_BIRDS
+        ), f"{video_id}: expected {DEFAULT_N_BIRDS} birds, got {len(birds)} — {birds}"
 
 
 def test_video_id_format(parsed_labels):
@@ -67,9 +67,9 @@ def test_no_duplicate_birds_across_groups_same_day(parsed_labels):
         all_birds = []
         for group, birds in groups.items():
             all_birds.extend(birds)
-        assert len(all_birds) == len(set(all_birds)), (
-            f"{cage}{day}: duplicate bird IDs across groups"
-        )
+        assert len(all_birds) == len(
+            set(all_birds)
+        ), f"{cage}{day}: duplicate bird IDs across groups"
 
 
 def test_birds_stay_within_cage(parsed_labels):
@@ -84,6 +84,6 @@ def test_birds_stay_within_cage(parsed_labels):
             bird_to_cages[bird_id].add(cage)
 
     for bird_id, cages in bird_to_cages.items():
-        assert len(cages) == 1, (
-            f"Bird {bird_id} appears in multiple cages: {sorted(cages)}"
-        )
+        assert (
+            len(cages) == 1
+        ), f"Bird {bird_id} appears in multiple cages: {sorted(cages)}"
