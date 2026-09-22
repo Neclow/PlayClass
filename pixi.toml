@@ -68,6 +68,7 @@ setup_gs2 = "bash scripts/setup_gs2.sh"
 omegaconf = ">=2.3.0"
 simpler-timer = ">=0.0.2"
 motmetrics = ">=1.4.0"
+ultralytics = "==8.4.23"
 
 [feature.tracker.tasks]
 test_tracker = "CUDA_VISIBLE_DEVICES=0 pixi run -e tracker python -m pytest tests/test_tracker.py -v"
