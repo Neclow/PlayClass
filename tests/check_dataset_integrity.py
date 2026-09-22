@@ -1,14 +1,11 @@
-"""Smoke test for built dataset: coverage table + duplicate frame check.
-
-Usage::
-
-    pixi run -e dataset test_postprocessing_smoke
-"""
+"""Smoke test for built dataset: coverage table + duplicate frame check."""
 
 import sys
+
 from pathlib import Path
 
 import pandas as pd
+
 from loguru import logger
 
 from src._config import DEFAULT_DATASET_DIR, DEFAULT_FPS
@@ -47,15 +44,18 @@ def main():
     print(f"\n  Worst coverage: {worst_cov:.2f}x ({worst_label})")
 
     # ---- Duplicate frames ----
-    dupes = tracks[tracks.duplicated(subset=["video_id", "bird_id", "frame_idx"], keep=False)]
+    dupes = tracks[
+        tracks.duplicated(subset=["video_id", "bird_id", "frame_idx"], keep=False)
+    ]
     n_dupes = len(dupes)
     if n_dupes == 0:
         print("  No duplicate frames!")
     else:
         print(f"\n  WARNING: {n_dupes} duplicate (video_id, bird_id, frame_idx) rows:")
         print(
-            dupes[["video_id", "bird_id", "frame_idx", "window", "chunk_idx"]]
-            .to_string(index=False)
+            dupes[
+                ["video_id", "bird_id", "frame_idx", "window", "chunk_idx"]
+            ].to_string(index=False)
         )
 
     print()

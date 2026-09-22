@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 
+from src._config import DEFAULT_FPS as FPS
 from src.dataset.tracking_postprocessing import (
     align_labels,
     assign_windows,
@@ -13,8 +14,6 @@ from src.dataset.tracking_postprocessing import (
     process_tracks,
     trim,
 )
-
-FPS = 25.0
 
 
 @pytest.fixture
@@ -529,9 +528,7 @@ class TestFilterIncompleteWindowsMaxCoverage:
             }
         )
 
-        tracks_out, labels_out = filter_incomplete_windows(
-            tracks, labels, FPS_LOOKUP
-        )
+        tracks_out, labels_out = filter_incomplete_windows(tracks, labels, FPS_LOOKUP)
 
         assert set(tracks_out["window"].unique()) == {0}
         assert set(labels_out["window"].unique()) == {0}
@@ -555,9 +552,7 @@ class TestFilterIncompleteWindowsMaxCoverage:
             }
         )
 
-        tracks_out, labels_out = filter_incomplete_windows(
-            tracks, labels, FPS_LOOKUP
-        )
+        tracks_out, labels_out = filter_incomplete_windows(tracks, labels, FPS_LOOKUP)
 
         assert len(tracks_out) == 125
         assert len(labels_out) == 1

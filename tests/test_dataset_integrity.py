@@ -1,7 +1,7 @@
-"""Data integrity tests for built dataset outputs.
+"""
+Data integrity tests for built dataset outputs.
 
 These tests require a built dataset at the default dataset directory.
-Run after: pixi run -e sam3-hf build_dataset
 """
 
 from pathlib import Path
