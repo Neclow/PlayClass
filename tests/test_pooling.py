@@ -1,15 +1,9 @@
 """Tests for adaptive_segment_pool1d and GatedAttentionPool modules."""
 
 import torch
-import pytest
 
-from src.classification.models import GatedAttentionPool
 from src.classification.datamodule import adaptive_segment_pool1d
-
-
-# ---------------------------------------------------------------------------
-# adaptive_segment_pool1d
-# ---------------------------------------------------------------------------
+from src.classification.models import GatedAttentionPool
 
 
 class TestAdaptiveSegmentPool1d:
@@ -114,7 +108,7 @@ class TestGatedAttentionPool:
             attn.gate_fc.bias.fill_(0.0)
         # Timestep 0: dim 0 = +5 (high gate), timestep 1: dim 0 = -5 (low gate)
         x = torch.zeros(1, 2, 4)
-        x[0, 0, 0] = 5.0   # gate ≈ sigmoid(50) ≈ 1.0
+        x[0, 0, 0] = 5.0  # gate ≈ sigmoid(50) ≈ 1.0
         x[0, 0, 1] = 1.0
         x[0, 1, 0] = -5.0  # gate ≈ sigmoid(-50) ≈ 0.0
         x[0, 1, 1] = 99.0  # should be mostly ignored

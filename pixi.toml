@@ -19,6 +19,9 @@ gs2 = { features = ["gs2"], solve-group = "default" }
 videoprism = { features = ["videoprism"], solve-group = "videoprism" }
 
 [tasks]
+# Setup
+setup_vjepa2 = "bash scripts/setup_vjepa2.1.sh"
+# Tracking
 track_best = "python -m pipeline.run_tracker"
 track_all = "bash pipeline/run_tracker_all.sh"
 track_yolo = "bash pipeline/run_tracker_all.sh yolo"
@@ -31,13 +34,15 @@ eval_gs2 = "bash pipeline/run_tracker_all.sh gs2 --eval"
 score_tracker = "python -m pipeline.eval_tracker_all score"
 prepare_tracker = "python -m pipeline.eval_tracker_all prepare"
 viz_tracking = "python -m pipeline.viz_tracking"
+# Embedding extraction
+extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
+extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
+# Testing
 test_features = "python -m pytest tests/test_features.py -v"
 test_labels = "python -m pytest tests/test_labels.py -v"
 check_dataset_integrity = "python -m pytest tests/check_dataset_integrity.py -v"
 test_dataset_integrity = "python -m pytest tests/test_dataset_integrity.py -v"
-setup_vjepa2 = "bash scripts/setup_vjepa2.1.sh"
-extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
-extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
+test_pooling = "python -m pytest tests/test_pooling.py -v"
 
 [dependencies]
 python = ">=3.11,<3.12"
@@ -60,6 +65,7 @@ supervision = ">=0.27.0,<0.28"
 torchcodec = "==0.9"
 torch = "==2.9.1+cu126"
 torchvision = "==0.24.1+cu126"
+lightning = ">=2.5"
 
 [pypi-options]
 extra-index-urls = ["https://download.pytorch.org/whl/cu126"]
