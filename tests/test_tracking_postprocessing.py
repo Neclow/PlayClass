@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name
+
 """Tests for the tracking postprocessing pipeline."""
 
 import pandas as pd
@@ -90,8 +92,10 @@ class TestTrim:
         assert len(id2_after) == 19  # frames 81..99
 
         # Other IDs untouched everywhere
+        # pylint: disable=unused-variable
         for oid in [0, 1]:
             assert len(result.query("tracking_id == @oid")) == 100
+        # pylint: enable=unused-variable
 
         # ID-scoped trim must NOT drop labels
         assert len(labels_out) == len(dummy_labels)
@@ -417,7 +421,7 @@ class TestAssignWindows:
             }
         )
 
-        tracks_out, labels_out = assign_windows(tracks, labels, FPS_LOOKUP)
+        tracks_out, _ = assign_windows(tracks, labels, FPS_LOOKUP)
 
         # Frames 0–125 (time 0.0–5.0s) → window 0
         w0 = tracks_out.query("window == 0")

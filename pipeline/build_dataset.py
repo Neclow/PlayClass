@@ -28,6 +28,7 @@ Typical workflow::
 """
 
 import json
+import os
 
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from glob import glob
@@ -243,8 +244,6 @@ def main():
     )
     # rglob doesn't follow symlinks by default; fall back to glob via os.walk
     if not tracking_dirs:
-        import os
-
         for root, _dirs, files in os.walk(args.tracking_dir, followlinks=True):
             if args.tracking_fname in files:
                 tracking_dirs.append(Path(root))
