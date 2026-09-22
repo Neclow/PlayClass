@@ -29,7 +29,7 @@ Typical workflow::
 
 import json
 
-from argparse import ArgumentParser
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from glob import glob
 from pathlib import Path
 
@@ -54,10 +54,6 @@ from src.dataset.tracking_postprocessing import (
     process_tracks,
 )
 from src.dataset.utils import extract_video_id, fmt_time, get_video_fps
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _save_json(path, data):
@@ -179,32 +175,28 @@ def save_data(save_dict, output_dir):
         logger.info(f"Saved: {path}")
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-
 def parse_args():
     parser = ArgumentParser(
-        description="Build tracking_issues.json per subdirectory, then build dataset."
+        description="Build tracking_issues.json per subdirectory, then build dataset.",
+        formatter_class=ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--tracking-dir",
         type=Path,
         default=f"{DEFAULT_TRACKING_DIR}/sam3_best",
-        help="Root dir to search for tracking_outputs.parquet (default: %(default)s)",
+        help="Root dir to search for tracking_outputs.parquet.",
     )
     parser.add_argument(
         "--postprocessing-dir",
         type=Path,
         default=DEFAULT_POSTPROCESSING_DIR,
-        help="Dir to read/write postprocessing JSONs (default: %(default)s)",
+        help="Dir to read/write postprocessing JSONs.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_DATASET_DIR,
-        help="Directory to write dataset outputs (default: %(default)s)",
+        help="Directory to write dataset outputs.",
     )
     parser.add_argument(
         "--label-dir",
@@ -222,7 +214,7 @@ def parse_args():
         "--min-window-coverage",
         type=float,
         default=DEFAULT_MIN_WINDOW_COVERAGE,
-        help="Minimum fraction of expected frames for a window to be kept (default: %(default)s)",
+        help="Minimum fraction of expected frames for a window to be kept.",
     )
     return parser.parse_args()
 

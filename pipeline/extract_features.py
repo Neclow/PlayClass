@@ -1,27 +1,23 @@
 """
-Extract handcrafted mask features from tracked objects.
+Extract morphokinematic features from tracked masks.
 
 Separate from ``build_dataset.py`` because feature extraction (decoding RLE
 masks, computing centroids) is expensive (~7 min) and dominates runtime.
 Splitting lets us rerun the lightweight steps (labels, windows, filtering)
 without re-extracting features.
-
-Usage::
-
-    pixi run -e sam3-hf extract_features
 """
 
 import sys
+
 from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
-import torch
+
 from loguru import logger
 
 from src._config import DEFAULT_DATASET_DIR
 from src.dataset.features import (
-    bin_features_per_window,
     extract_mask_features,
     summarize_features_by_window,
 )
@@ -29,13 +25,13 @@ from src.dataset.features import (
 
 def parse_args():
     parser = ArgumentParser(
-        description="Extract mask features from tracks.parquet."
+        description="Extract morphokinematic features from tracks.parquet."
     )
     parser.add_argument(
         "--dataset-dir",
         type=Path,
         default=DEFAULT_DATASET_DIR,
-        help="Directory containing tracks.parquet and labels.parquet (default: %(default)s)",
+        help="Directory containing tracks.parquet and labels.parquet",
     )
     parser.add_argument(
         "--summarize-only",
@@ -54,7 +50,9 @@ def main():
     if args.summarize_only:
         if not all_path.exists():
             logger.error(f"features_all.parquet not found in {args.dataset_dir}")
-            logger.error("Run without --summarize-only first to extract per-frame features.")
+            logger.error(
+                "Run without --summarize-only first to extract per-frame features."
+            )
             sys.exit(1)
         features = pd.read_parquet(all_path)
         logger.info(f"Loaded {len(features)} per-frame features from {all_path}")
@@ -107,14 +105,14 @@ def main():
     logger.info(f"Saved: {windowed_path}")
 
     # Build temporal feature tensors (same format as embeddings.pt)
-    logger.info("Building temporal feature tensors...")
-    temporal_dict = bin_features_per_window(features)
-    temporal_path = args.dataset_dir / "features_binned.pt"
-    torch.save(temporal_dict, temporal_path)
-    logger.info(
-        f"Saved: {temporal_path} ({len(temporal_dict)} windows, "
-        f"{next(iter(temporal_dict.values())).shape[-1]} features)"
-    )
+    # logger.info("Building temporal feature tensors...")
+    # temporal_dict = bin_features_per_window(features)
+    # temporal_path = args.dataset_dir / "features_binned.pt"
+    # torch.save(temporal_dict, temporal_path)
+    # logger.info(
+    #     f"Saved: {temporal_path} ({len(temporal_dict)} windows, "
+    #     f"{next(iter(temporal_dict.values())).shape[-1]} features)"
+    # )
 
     logger.info("Done.")
 
