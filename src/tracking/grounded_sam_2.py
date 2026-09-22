@@ -25,7 +25,7 @@ from transformers import (
     AutoProcessor,
 )
 
-from ..io import (
+from ..utils.io import (
     create_video_run_directory,
     get_video_metadata,
     load_video_frames_sequential,

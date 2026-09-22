@@ -28,7 +28,7 @@ from src._config import (
 )
 from src.dataset.embeddings import extract_bodypart_embeddings, extract_embeddings
 from src.dataset.utils import assert_embedding_label_alignment, resolve_video_path
-from src.memory import free_gpu_memory
+from src.utils.memory import free_gpu_memory
 
 
 def parse_args():

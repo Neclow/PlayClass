@@ -37,7 +37,7 @@ from src.dataset.embeddings.vjepa2 import (
     is_hub_model,
 )
 from src.dataset.utils import assert_embedding_label_alignment, resolve_video_path
-from src.memory import free_gpu_memory
+from src.utils.memory import free_gpu_memory
 
 
 def parse_args():

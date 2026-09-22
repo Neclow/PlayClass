@@ -13,7 +13,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 
 from src._config import DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
-from src.io import create_video_run_directory
+from src.utils.io import create_video_run_directory
 
 DEFAULT_CONFIG = "config/sam3_best.yaml"
 BENCHMARK_VIDEOS = "config/benchmark_videos.txt"

@@ -1532,7 +1532,7 @@ def write_annotated_clip(
     ----------
     frames : sequence of ndarray
         (H, W, 3) RGB uint8 arrays (as returned by ``load_video_frames_*``
-        in ``src.io``).
+        in ``src.utils.io``).
     outputs_per_frame : dict
         Keyed by LOCAL index into ``frames`` (re-key a global-frame dict with
         the notebook's ``globalkey_to_local``). Values are SAM3 output dicts

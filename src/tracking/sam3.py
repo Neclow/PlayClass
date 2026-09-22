@@ -23,7 +23,7 @@ from transformers import (
     Sam3VideoProcessor,
 )
 
-from ..io import (
+from ..utils.io import (
     FRAME_LOADERS,
     create_video_run_directory,
     get_video_metadata,
@@ -31,7 +31,7 @@ from ..io import (
     sanitize_filename,
     setup_logger,
 )
-from ..memory import free_gpu_memory, free_system_memory
+from ..utils.memory import free_gpu_memory, free_system_memory
 from .chunking import (
     build_manual_chunks,
     chunk_video_frames_adaptive,

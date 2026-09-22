@@ -24,7 +24,7 @@ from src.dataset.crops import (
 )
 from src.dataset.embeddings import _split_mask_thirds
 from src.dataset.utils import resolve_video_path
-from src.io import load_video_frames_torchcodec as load_video_frames
+from src.utils.io import load_video_frames_torchcodec as load_video_frames
 
 OUTPUT_DIR = Path("img/crop_smoke_test")
 N_FRAMES = 4  # frames per window to visualize

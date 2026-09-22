@@ -9,7 +9,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from src.dataset.crops import compute_union_bbox, compute_union_origin, crop_frame
-from src.io import load_video_frames_sequential
+from src.utils.io import load_video_frames_sequential
 
 
 def extract_videoprism_embeddings(

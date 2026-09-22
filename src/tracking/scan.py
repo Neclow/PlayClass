@@ -21,7 +21,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 from .._config import DEFAULT_TRACKER_CONFIG
-from ..memory import free_gpu_memory
+from ..utils.memory import free_gpu_memory
 from .metrics import compute_separation_score, compute_yolo_per_frame_metrics
 
 

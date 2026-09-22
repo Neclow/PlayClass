@@ -13,7 +13,7 @@ import torch
 
 from PIL import Image
 
-from src.io import load_video_frames_torchcodec as load_video_frames
+from src.utils.io import load_video_frames_torchcodec as load_video_frames
 from src.tracking.viz import overlay_masks
 
 TEXT = "bird"
