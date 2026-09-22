@@ -41,7 +41,7 @@ import yaml
 
 from loguru import logger
 
-from src.tracker.scan import identify_occlusion_periods
+from src.tracking.scan import identify_occlusion_periods
 from src.tracking.viz import generate_all_visualizations
 
 # ---------------------------------------------------------------------------
