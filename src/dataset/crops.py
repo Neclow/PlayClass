@@ -88,11 +88,19 @@ def crop_frame(
     h, w = frame_np.shape[:2]
     x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
 
+    if crop_mode == "bbox":
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
+        if x2 <= x1 or y2 <= y1:
+            return None, None
+        return frame_np[y1:y2, x1:x2], None
+
     # Parse crop size from mode suffix (e.g. "plain256" -> 256, "union512" -> 512)
     _SIZED_PREFIXES = ("plain", "union", "darken", "roi")
     prefix = next((p for p in _SIZED_PREFIXES if crop_mode.startswith(p)), None)
-    if prefix is not None and prefix != "bbox":
-        crop_size = int(crop_mode.removeprefix(prefix))
+    if prefix is None:
+        raise ValueError(f"Unknown crop mode: {crop_mode!r}")
+    crop_size = int(crop_mode.removeprefix(prefix))
 
     if crop_mode.startswith("plain"):
         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
@@ -134,13 +142,3 @@ def crop_frame(
             }
 
         return crop, extra
-
-    if crop_mode != "bbox":
-        raise ValueError(f"Unknown crop mode: {crop_mode!r}")
-
-    # Default: bbox mode
-    x1, y1 = max(0, x1), max(0, y1)
-    x2, y2 = min(w, x2), min(h, y2)
-    if x2 <= x1 or y2 <= y1:
-        return None, None
-    return frame_np[y1:y2, x1:x2], None
