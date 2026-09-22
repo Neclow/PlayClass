@@ -2,11 +2,6 @@
 
 Picks one window per behaviour class, saves side-by-side crops for all
 crop modes + PCA body-part split visualization. Outputs to img/crop_smoke_test/.
-
-Usage::
-
-    pixi run -e sam3-hf python -m src.test.crop_smoke_test \
-        --video-dir data/video/batch data/video/batch2
 """
 
 from argparse import ArgumentParser
@@ -15,15 +10,21 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_util
+
 from loguru import logger
 from PIL import Image, ImageDraw
 
-from src._config import DEFAULT_DATASET_DIR, DEFAULT_TRACKING_DIR, LABEL_ORDER
-from src.dataset.crops import CROP_MODES, compute_union_origin, crop_frame
+from src._config import DEFAULT_DATASET_DIR, DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR, LABEL_ORDER
+from src.dataset.crops import (
+    CROP_MODES,
+    compute_union_origin,
+    crop_frame,
+    needs_mask,
+    union_crop_size,
+)
 from src.dataset.embeddings import _split_mask_thirds
 from src.dataset.utils import resolve_video_path
 from src.io import load_video_frames_torchcodec as load_video_frames
-
 
 OUTPUT_DIR = Path("img/crop_smoke_test")
 N_FRAMES = 4  # frames per window to visualize
@@ -34,10 +35,9 @@ def parse_args():
     parser.add_argument(
         "--video-dir",
         type=Path,
-        default="data/video",
         nargs="+",
-        required=True,
-        help="Directory(ies) with .mp4 files",
+        default=None,
+        help="Directory(ies) with .mp4 files (default: all subdirs of data/videos/)",
     )
     parser.add_argument(
         "--dataset-dir",
@@ -45,9 +45,16 @@ def parse_args():
         default=DEFAULT_DATASET_DIR,
     )
     parser.add_argument(
+        "--tracking-model",
+        type=str,
+        default="sam3_best",
+        help="Tracking model subdirectory under the tracking results dir.",
+    )
+    parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_TRACKING_DIR,
+        default=None,
+        help="Override: explicit tracking dir (ignores --tracking-model).",
     )
     parser.add_argument(
         "--exclude",
@@ -104,6 +111,15 @@ def visualize_bodypart_split(frame_np, bbox, rle_mask):
 
 def main():
     args = parse_args()
+
+    if args.tracking_dir is None:
+        args.tracking_dir = Path(DEFAULT_TRACKING_DIR) / args.tracking_model
+
+    if args.video_dir is None:
+        root = Path(DEFAULT_VIDEO_DIR)
+        args.video_dir = sorted(p for p in root.iterdir() if p.is_dir())
+        logger.info(f"Auto-discovered {len(args.video_dir)} video dir(s) under {root}")
+
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     tracks = pd.read_parquet(

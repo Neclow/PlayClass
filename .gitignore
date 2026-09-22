@@ -67,6 +67,7 @@ ext/
 ext-data
 video-data/
 .dvc/
+config/tracker_eval
 
 # Notes & drafts
 tmp/
