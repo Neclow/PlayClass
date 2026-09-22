@@ -1,9 +1,8 @@
 """Build the behaviour dataset from tracking outputs and postprocessing JSONs.
 
-Reads ``tracking_outputs.parquet`` from ``--tracking-dir`` (default:
-``data/results/tracking/sam3_best``) and reads/writes postprocessing JSONs
+Reads ``tracking_outputs.parquet`` from ``--tracking-dir`` and reads/writes postprocessing JSONs
 (``tracking_issues.json``, ``tracking_postprocessing.json``, ``bird_info.json``)
-under ``--postprocessing-dir`` (default: ``data/postprocessing``).
+under ``--postprocessing-dir``.
 
 Steps:
 

@@ -26,17 +26,27 @@ This downloads the checkpoint and patches the torch.hub cache to rename
 """
 
 import sys
+
 from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 import torch
+
 from loguru import logger
 from transformers import AutoModel, AutoVideoProcessor
 
-from src._config import DEFAULT_DATASET_DIR, DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
-from src.dataset.crops import CROP_MODES
-from src.dataset.embeddings.vjepa2 import VJEPA21Wrapper, extract_video_embeddings, is_hub_model
+from src._config import (
+    DEFAULT_DATASET_DIR,
+    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_VIDEO_DIR,
+)
+from src.dataset.crops import CROP_MODES, needs_mask
+from src.dataset.embeddings.vjepa2 import (
+    VJEPA21Wrapper,
+    extract_video_embeddings,
+    is_hub_model,
+)
 from src.dataset.utils import assert_embedding_label_alignment, resolve_video_path
 from src.memory import free_gpu_memory
 
@@ -53,7 +63,7 @@ def parse_args():
     parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_TRACKING_DIR,
+        default=DEFAULT_POSTPROCESSING_DIR,
     )
     parser.add_argument(
         "--video-dir",

@@ -104,7 +104,7 @@ def main():
     features_windowed.to_parquet(windowed_path)
     logger.info(f"Saved: {windowed_path}")
 
-    # Build temporal feature tensors (same format as embeddings.pt)
+    # Build temporal feature tensors
     # logger.info("Building temporal feature tensors...")
     # temporal_dict = bin_features_per_window(features)
     # temporal_path = args.dataset_dir / "features_binned.pt"

@@ -146,10 +146,10 @@ def parse_input(input_str):
     Examples::
 
         "features"                          → (True,  False, [])
-        "embeddings"                        → (False, True,  ["embeddings.pt"])
+        "embeddings_dinov3_vitl"            → (False, True,  ["embeddings_dinov3_vitl.pt"])
         "embeddings_250"                    → (False, True,  ["embeddings_250.pt"])
-        "features+embeddings"               → (True,  True,  ["embeddings.pt"])
-        "features+embeddings+embeddings_union512" → (True, True, ["embeddings.pt", "embeddings_union512.pt"])
+        "features+embeddings_dinov3_vitl"   → (True,  True,  ["embeddings_dinov3_vitl.pt"])
+        "features+embeddings_dinov3_vitl+embeddings_union512" → (True, True, ["embeddings_dinov3_vitl.pt", "embeddings_union512.pt"])
     """
     parts = input_str.split("+")
     use_features = False
@@ -384,7 +384,7 @@ def main():
         use_features=use_features,
         use_embeddings=use_embeddings,
         temporal=temporal,
-        embeddings_files=embeddings_files or ["embeddings.pt"],
+        embeddings_files=embeddings_files or ["embeddings_dinov3_vitl.pt"],
         n_segments=args.n_segments,
     )
     dm.class_weight_scheme = args.class_weights

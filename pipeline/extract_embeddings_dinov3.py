@@ -11,15 +11,21 @@ Usage::
 """
 
 import sys
-from argparse import ArgumentParser
+
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 import torch
+
 from loguru import logger
 from transformers import AutoImageProcessor, AutoModel
 
-from src._config import DEFAULT_DATASET_DIR, DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
+from src._config import (
+    DEFAULT_DATASET_DIR,
+    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_VIDEO_DIR,
+)
 from src.dataset.embeddings import extract_bodypart_embeddings, extract_embeddings
 from src.dataset.utils import assert_embedding_label_alignment, resolve_video_path
 from src.memory import free_gpu_memory
@@ -27,19 +33,20 @@ from src.memory import free_gpu_memory
 
 def parse_args():
     parser = ArgumentParser(
-        description="Extract DINOv3 embeddings from tracked objects."
+        description="Extract DINOv3 embeddings from tracked objects.",
+        formatter_class=ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--dataset-dir",
         type=Path,
         default=DEFAULT_DATASET_DIR,
-        help="Directory containing tracks.parquet and labels.parquet (default: %(default)s)",
+        help="Directory containing tracks.parquet and labels.parquet.",
     )
     parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_TRACKING_DIR,
-        help="Root tracking dir for resolving video subdir names (default: %(default)s)",
+        default=DEFAULT_POSTPROCESSING_DIR,
+        help="Root tracking dir for resolving video subdir names.",
     )
     parser.add_argument(
         "--video-dir",
@@ -52,25 +59,25 @@ def parse_args():
         "--batch-size",
         type=int,
         default=32,
-        help="Crops per forward pass (default: 32)",
+        help="Crops per forward pass",
     )
     parser.add_argument(
         "--model-name",
         type=str,
         default="facebook/dinov3-vitl16-pretrain-lvd1689m",
-        help='HuggingFace model ID (default: "facebook/dinov3-vitl16-pretrain-lvd1689m")',
+        help="HuggingFace model ID.",
     )
     parser.add_argument(
         "--device",
         type=str,
         default="cuda:0",
-        help="Device (e.g. cuda:0, cuda:1, cpu)",
+        help="Device (e.g., cuda:0, cuda:1, cpu)",
     )
     parser.add_argument(
         "--resolution",
         type=int,
         default=None,
-        help="Override processor resize resolution (default: use processor config, typically 224). "
+        help="Override processor resize resolution. "
         "DINOv3 was trained at 256, adapted up to 768. Local crops used 112-336.",
     )
     parser.add_argument(

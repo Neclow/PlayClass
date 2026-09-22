@@ -16,6 +16,7 @@ Usage::
 
 import os
 import sys
+
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -27,6 +28,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
+
+# Block TensorFlow from grabbing GPU
+import tensorflow as tf
+
+# Lazy torch import — only needed for saving .pt files
+import torch
+
 from loguru import logger
 from PIL import Image
 from tqdm import tqdm
@@ -41,7 +49,11 @@ import tensorflow as tf
 tf.config.set_visible_devices([], "GPU")
 tf.config.set_visible_devices([], "TPU")
 
-from src._config import DEFAULT_DATASET_DIR, DEFAULT_TRACKING_DIR, DEFAULT_VIDEO_DIR
+from src._config import (
+    DEFAULT_DATASET_DIR,
+    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_VIDEO_DIR,
+)
 from src.dataset.crops import CROP_MODES
 from src.dataset.embeddings.videoprism import extract_videoprism_embeddings
 from src.dataset.utils import (
@@ -55,8 +67,14 @@ def parse_args():
         description="Extract VideoPrism embeddings from tracked objects."
     )
     parser.add_argument("--dataset-dir", type=Path, default=DEFAULT_DATASET_DIR)
-    parser.add_argument("--tracking-dir", type=Path, default=DEFAULT_TRACKING_DIR)
-    parser.add_argument("--video-dir", type=Path, nargs="+", default=None, help=f"Directory(ies) with .mp4 files (default: all subdirs of {DEFAULT_VIDEO_DIR}/)")
+    parser.add_argument("--tracking-dir", type=Path, default=DEFAULT_POSTPROCESSING_DIR)
+    parser.add_argument(
+        "--video-dir",
+        type=Path,
+        nargs="+",
+        default=None,
+        help=f"Directory(ies) with .mp4 files (default: all subdirs of {DEFAULT_VIDEO_DIR}/)",
+    )
     parser.add_argument("--device", type=int, default=0)
     parser.add_argument(
         "--model-name",
