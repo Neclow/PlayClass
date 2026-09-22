@@ -39,6 +39,10 @@ extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
 extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
 # Clustering
 clustering_grid = "python -m pipeline.clustering_grid"
+# Classification
+train = "python -m pipeline.train"
+train_sweep_k = "bash pipeline/train_sweep_k.sh"
+train_ablate_best = "bash pipeline/train_ablate_best.sh"
 # Testing
 test_features = "python -m pytest tests/test_features.py -v"
 test_labels = "python -m pytest tests/test_labels.py -v"

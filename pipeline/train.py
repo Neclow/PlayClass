@@ -26,11 +26,11 @@ Usage::
 
 import gc
 import json
+import logging
+
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
-
-import logging
 
 import lightning as L
 import torch
