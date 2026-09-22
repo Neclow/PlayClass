@@ -14,8 +14,9 @@ cuda = "12"
 
 [environments]
 default = { solve-group = "default" }
-tracker = { features = ["tracker"], solve-group = "tracker" }
-gs2 = { features = ["gs2"], solve-group = "gs2" }
+tracker = { features = ["tracker"], solve-group = "default" }
+gs2 = { features = ["gs2"], solve-group = "default" }
+videoprism = { features = ["videoprism"], solve-group = "videoprism" }
 
 [tasks]
 track_best = "python -m pipeline.run_tracker"
@@ -34,10 +35,14 @@ test_features = "python -m pytest tests/test_features.py -v"
 test_labels = "python -m pytest tests/test_labels.py -v"
 check_dataset_integrity = "python -m pytest tests/check_dataset_integrity.py -v"
 test_dataset_integrity = "python -m pytest tests/test_dataset_integrity.py -v"
+setup_vjepa2 = "bash scripts/setup_vjepa2.1.sh"
+extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
+extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
 
 [dependencies]
 python = ">=3.11,<3.12"
 pytest = ">=9.0.2,<10"
+packaging = ">=20,<26.3"
 
 [pypi-dependencies]
 transformers = { git = "https://github.com/huggingface/transformers", rev = "v5.0.0rc2" }
@@ -47,6 +52,7 @@ loguru = ">=0.7.3"
 matplotlib = ">=3.7.0,<4"
 pandas = ">=3.0.0,<4"
 pillow = ">=12.1.0,<13"
+pyarrow = ">=23.0.0,<24"
 pycocotools = ">=2.0.11,<3"
 opencv-python = ">=4.11.0.86, <5"
 openpyxl = ">=3.1.0,<4"
@@ -73,3 +79,15 @@ ultralytics = "==8.4.23"
 [feature.tracker.tasks]
 test_tracker = "CUDA_VISIBLE_DEVICES=0 pixi run -e tracker python -m pytest tests/test_tracker.py -v"
 test_tracking_postprocessing = "python -m pytest tests/test_tracking_postprocessing.py -v"
+
+[feature.videoprism.target.linux-64.pypi-dependencies]
+jax = { version = "*", extras = ["cuda12"] }
+opt-einsum = ">=3.3,<3.4"
+videoprism = { git = "https://github.com/google-deepmind/videoprism" }
+einshape = ">=1.0"
+mediapy = ">=1.2.0"
+pillow = ">=12.1.0,<13"
+opencv-python-headless = ">=4.10"
+
+[feature.videoprism.tasks]
+extract_videoprism = "python -m pipeline.extract_embeddings_videoprism"
