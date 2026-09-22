@@ -7,7 +7,15 @@ arrays; model-specific resizing is handled by the caller.
 
 import numpy as np
 
-CROP_MODES = ("bbox", "plain256", "plain384", "union384", "union512", "darken512", "roi512")
+CROP_MODES = (
+    "bbox",
+    "plain256",
+    "plain384",
+    "union384",
+    "union512",
+    "darken512",
+    "roi512",
+)
 
 
 def compute_union_bbox(bboxes):
@@ -51,7 +59,9 @@ def compute_union_origin(bboxes, frame_h, frame_w, crop_size=512):
     return ox, oy
 
 
-def crop_frame(frame_np, bbox, crop_mode, *, union_origin=None, darken_factor=0.4, patch_grid=16):
+def crop_frame(
+    frame_np, bbox, crop_mode, *, union_origin=None, darken_factor=0.4, patch_grid=16
+):
     """Crop a single frame according to the specified crop mode.
 
     Parameters
@@ -89,12 +99,12 @@ def crop_frame(frame_np, bbox, crop_mode, *, union_origin=None, darken_factor=0.
         half = crop_size // 2
         ox = max(0, min(cx - half, w - crop_size))
         oy = max(0, min(cy - half, h - crop_size))
-        return frame_np[oy:oy + crop_size, ox:ox + crop_size], None
+        return frame_np[oy : oy + crop_size, ox : ox + crop_size], None
 
     if prefix in ("union", "darken", "roi"):
         assert union_origin is not None, f"{crop_mode} requires union_origin"
         ox, oy = union_origin
-        crop = frame_np[oy:oy + crop_size, ox:ox + crop_size]
+        crop = frame_np[oy : oy + crop_size, ox : ox + crop_size]
 
         extra = None
         if prefix == "darken":

@@ -350,8 +350,7 @@ def run_yolo_scan(
         from ultralytics import YOLO
     except ImportError as exc:
         raise ImportError(
-            "ultralytics is required for YOLO scan. "
-            "Install it with: pixi install"
+            "ultralytics is required for YOLO scan. " "Install it with: pixi install"
         ) from exc
 
     video_path = str(video_path)
