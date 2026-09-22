@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
 from loguru import logger
 
 
@@ -15,7 +16,10 @@ def format_confusion_matrix(cm: np.ndarray, labels: list[str]) -> str:
 
 
 def aggregate_scalars(
-    fold_results: list[dict], scalar_keys: list[str], run_dir: Path, prefix: str = "lovo"
+    fold_results: list[dict],
+    scalar_keys: list[str],
+    run_dir: Path,
+    prefix: str = "loco",
 ):
     """Build summary CSV with MEAN/STD rows and log per-metric stats."""
     rows = [{k: r[k] for k in scalar_keys} for r in fold_results]
@@ -59,7 +63,7 @@ def aggregate_confusion_matrices(
     cm_keys: list[str],
     run_dir: Path,
     labels: list[str],
-    prefix: str = "lovo",
+    prefix: str = "loco",
 ) -> dict[str, float]:
     """Sum and write confusion matrices across folds.
 
