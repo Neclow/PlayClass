@@ -1,6 +1,6 @@
 # YOLO scan
 # Runs YOLO inference + boundary analysis and exits without loading SAM3 models.
-# Also used as the default config for script/compute_chunk_boundaries.py.
+# Also used as the default config for pipeline/compute_chunk_boundaries.py.
 
 # =============================================================================
 # Video/IO Configuration
@@ -40,8 +40,8 @@ adaptive_search_window_seconds: 10.0 # Search radius (±s) when refining each bo
 #
 # To retune without re-running YOLO inference:
 #   1. Edit the params below
-#   2. pixi run -e sam3-hf python -m script.compute_chunk_boundaries \
-#          --run-dir <run_dir> --config config/yolo_scan_only.yaml
+#   2. pixi run -e tracker python -m pipeline.compute_chunk_boundaries \
+#          --run-dir <run_dir> --config config/yolo_botsort.yaml
 # =============================================================================
 yolo_scan:
   # --- YOLO inference ---
