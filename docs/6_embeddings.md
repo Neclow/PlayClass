@@ -1,10 +1,10 @@
 # Embeddings Extraction
 
-| Script                                    | Env          | Description                                  |
-| ----------------------------------------- | ------------ | -------------------------------------------- |
-| `script/extract_embeddings_dinov3.py`     | `embeddings` | DINOv3 CLS-token embeddings (image backbone) |
-| `script/extract_embeddings_vjepa2.py`     | `embeddings` | V-JEPA 2 / 2.1 video embeddings              |
-| `script/extract_embeddings_videoprism.py` | `videoprism` | VideoPrism video embeddings (JAX)            |
+| Script                                      | Env          | Description                                  |
+| ------------------------------------------- | ------------ | -------------------------------------------- |
+| `pipeline/extract_embeddings_dinov3.py`     | `embeddings` | DINOv3 CLS-token embeddings (image backbone) |
+| `pipeline/extract_embeddings_vjepa2.py`     | `embeddings` | V-JEPA 2 / 2.1 video embeddings              |
+| `pipeline/extract_embeddings_videoprism.py` | `videoprism` | VideoPrism video embeddings (JAX)            |
 
 All three scripts read `tracks.parquet` from the dataset dir, load video frames,
 and save a `.pt` dict keyed by `(video_id, bird_id, window)`.
@@ -18,16 +18,16 @@ run.
 
 ```sh
 # Default: ViT-L, bbox crop
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29
 
 # ViT-B backbone
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29 \
     --model-name facebook/dinov3-vitb16-pretrain-lvd1689m
 
 # Custom resolution (DINOv3 was trained at 256; supports up to 768)
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29 --resolution 256
 ```
 
@@ -41,7 +41,7 @@ auto-generated from args).
 ### V-JEPA 2 (HuggingFace) — no setup needed
 
 ```sh
-pixi run -e embeddings python -m script.extract_embeddings_vjepa2 \
+pixi run extract_vjepa2 \
     --video-dir data/videos --device cuda:0 --temporal
 ```
 
@@ -53,8 +53,8 @@ between the hub repo's `src/` directory and this project's own `src/` package.
 
 ```sh
 # Download checkpoint + patch hub cache (run once)
-bash script/setup_vjepa2.1.sh                   # default: vjepa2_1_vit_large_384
-bash script/setup_vjepa2.1.sh vjepa2_1_vit_base_384   # ViT-B variant
+bash scripts/setup_vjepa2.1.sh                   # default: vjepa2_1_vit_large_384
+bash scripts/setup_vjepa2.1.sh vjepa2_1_vit_base_384   # ViT-B variant
 ```
 
 Available models:
@@ -69,7 +69,7 @@ Available models:
 Then extract:
 
 ```sh
-pixi run -e embeddings python -m script.extract_embeddings_vjepa2 \
+pixi run extract_vjepa2 \
     --video-dir data/videos/day_28 data/videos/day_29 \
     --device cuda:0 --temporal \
     --model-name vjepa2_1_vit_large_384

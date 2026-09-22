@@ -2,11 +2,8 @@
 YOLO-based raw inference scan.
 
 Runs YOLO+ByteTrack on a video and returns a per-detection DataFrame
-(``yolo_tracking.parquet``).  All downstream analysis — per-frame metrics,
-occlusion periods, separation windows, and adaptive chunking — lives in
-``src.yolo.boundaries``.
-
-Re-exports from ``src.yolo.boundaries`` are provided so that existing callers continue to work unchanged.
+(``yolo_tracking.parquet``).  Per-frame metrics (occlusion, separation,
+clustering) are computed by ``src.tracking.metrics``.
 """
 
 from pathlib import Path
@@ -350,8 +347,7 @@ def run_yolo_scan(
         from ultralytics import YOLO
     except ImportError as exc:
         raise ImportError(
-            "ultralytics is required for YOLO scan. "
-            "Install it with: pixi install -e sam3-hf"
+            "ultralytics is required for YOLO scan. " "Install it with: pixi install"
         ) from exc
 
     video_path = str(video_path)

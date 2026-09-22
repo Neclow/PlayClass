@@ -37,6 +37,9 @@ viz_tracking = "python -m pipeline.viz_tracking"
 # Embedding extraction
 extract_dinov3 = "python -m pipeline.extract_embeddings_dinov3"
 extract_vjepa2 = "python -m pipeline.extract_embeddings_vjepa2"
+# Feature extraction
+build_dataset = "python -m pipeline.build_dataset"
+extract_features = "python -m pipeline.extract_features"
 # Clustering
 clustering_grid = "python -m pipeline.clustering_grid"
 # Classification
@@ -99,7 +102,8 @@ motmetrics = ">=1.4.0"
 ultralytics = "==8.4.23"
 
 [feature.tracker.tasks]
-test_tracker = "CUDA_VISIBLE_DEVICES=0 pixi run -e tracker python -m pytest tests/test_tracker.py -v"
+compute_chunk_boundaries = "python -m pipeline.compute_chunk_boundaries"
+test_tracker = "CUDA_VISIBLE_DEVICES=0 python -m pytest tests/test_tracker.py -v"
 test_tracking_postprocessing = "python -m pytest tests/test_tracking_postprocessing.py -v"
 
 [feature.videoprism.target.linux-64.pypi-dependencies]

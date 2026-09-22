@@ -10,9 +10,8 @@ Usage:
     pixi run -e tracker-evaluation python -m src.tracker_eval.create_ablation_table
 """
 
-from __future__ import annotations
-
 import argparse
+
 from pathlib import Path
 
 import pandas as pd

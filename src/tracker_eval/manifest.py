@@ -1,4 +1,4 @@
-"""Build `data/tracker_eval/video_manifest.csv` from the cached YOLO scan parquets.
+"""Build `data/results/eval_tracking/video_manifest.csv` from the cached YOLO scan parquets.
 
 Ranks the 30 candidate videos (5 cages × 3 groups × 2 days) by a composite
 difficulty score computed across 7 proxies derived from
@@ -27,7 +27,7 @@ selected videos come from day 28. The joint cross-day ranking has
 historically produced 2 day-28 picks without forcing.
 
 Scan-dir discovery walks `--scan-runs-root` (default
-`ext-data/output/results/sam3-hf`) for `{YYYYMMDD_HHMMSS}_sam3_hf/{stem}/`
+`data/results/tracking/sam3_best`) for `{YYYYMMDD_HHMMSS}_sam3_hf/{stem}/`
 directories containing `yolo_tracking.parquet`. When the same video stem
 appears in multiple timestamped runs, the lexicographically latest run is
 used (timestamp prefix orders correctly).
@@ -102,10 +102,14 @@ def discover_scan_dirs(scan_runs_root: Path) -> dict[str, Path]:
 
 def compute_difficulty_proxies(scan_dir: Path) -> dict[str, float]:
     pf = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_metrics.parquet")
-    summary = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_summary.parquet").iloc[0]
+    summary = pd.read_parquet(scan_dir / "metrics" / "yolo_scan_summary.parquet").iloc[
+        0
+    ]
     duration_min = float(summary["video_duration_seconds"]) / 60.0
 
-    finite_mcd = pf.loc[pf["mean_centroid_distance"] != float("inf"), "mean_centroid_distance"]
+    finite_mcd = pf.loc[
+        pf["mean_centroid_distance"] != float("inf"), "mean_centroid_distance"
+    ]
     return {
         "frac_high_occlusion": float(pf["is_high_occlusion"].mean()),
         "mean_overlapping_pairs": float(pf["num_overlapping_pairs"].mean()),

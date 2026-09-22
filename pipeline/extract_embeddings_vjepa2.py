@@ -7,8 +7,8 @@ mean-pools the output tokens into one embedding per window.
 
 V-JEPA 2.1 setup (one-time)::
 
-    bash script/setup_vjepa21.sh              # default: vjepa2_1_vit_large_384
-    bash script/setup_vjepa21.sh <model>      # other variants
+    bash scripts/setup_vjepa2.1.sh              # default: vjepa2_1_vit_large_384
+    bash scripts/setup_vjepa2.1.sh <model>      # other variants
 
 This downloads the checkpoint and patches the torch.hub cache to rename
 ``src/`` to ``vjepa2/`` (avoids collision with this project's ``src/``).

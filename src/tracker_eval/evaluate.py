@@ -5,9 +5,9 @@ Reads sparse GT (from `cvat_to_mot.py`) and dense predictions (from
 (A_yolo_botsort, B_gs2_strict, B_gs2_fixed, C_sam3_frame_zero,
 D_sam3_fixed, E_sam3_adaptive) and emits:
 
-    data/tracker_eval/results/metrics_per_video.csv
-    data/tracker_eval/results/metrics_per_cage.csv
-    data/tracker_eval/results/metrics_aggregate.csv
+    data/results/eval_tracking/results/metrics_per_video.csv
+    data/results/eval_tracking/results/metrics_per_cage.csv
+    data/results/eval_tracking/results/metrics_aggregate.csv
 
 Two metric libraries are used:
 
@@ -30,6 +30,7 @@ Usage:
 import argparse
 import sys
 
+from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -83,6 +84,7 @@ def _ensure_eval_deps() -> None:
     mm = _mm
     np = _np
     HOTA = _HOTA
+
 
 VARIANTS = (
     "A_yolo_botsort",
@@ -280,7 +282,9 @@ def run(args: argparse.Namespace) -> None:
     ]
     for v in VARIANTS:
         if v not in variants:
-            print(f"[skip] {v}: predictions incomplete under {args.predictions_mot_dir / v}")
+            print(
+                f"[skip] {v}: predictions incomplete under {args.predictions_mot_dir / v}"
+            )
     print(
         f"{len(videos)} videos x {len(variants)} variants = {len(videos) * len(variants)} runs"
     )

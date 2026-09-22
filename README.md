@@ -30,41 +30,44 @@ pixi install
   - `videoprism` (JAX)
   - `classifier` (training, evaluation)
 
-Pixi environments: `default` (base), `tracker` (SAM3), `dataset` (build + features), `embeddings` (DINOv3/V-JEPA), `classifier` (training), `videoprism` (JAX), `gs2` (Grounded-SAM-2; used for tracker benchmarking), `tracker-evaluation` (CPU-only tracker scoring; motmetrics + pycocotools). Platform is Linux-only (CUDA 12.6).
+Pixi environments: `default` (base), `tracker` (SAM3), `dataset` (build +
+features), `embeddings` (DINOv3/V-JEPA), `classifier` (training), `videoprism`
+(JAX), `gs2` (Grounded-SAM-2; used for tracker benchmarking),
+`tracker-evaluation` (CPU-only tracker scoring; motmetrics + pycocotools).
+Platform is Linux-only (CUDA 12.6).
 
 All commands use [pixi](https://pixi.sh) task definitions from `pixi.toml`.
-Scripts in `script/` and `pipeline/` are the executables; `src/` holds reusable library modules.
+Scripts in `scripts/` and `pipeline/` are the executables; `src/` holds reusable
+library modules.
 
 ```
 data/
   labels/          Registration protocol Excel files (behaviour labels + bird info)
-  tracking/        Symlinks to tracking run output dirs (gitignored)
   postprocessing/  Version-controlled per-video postprocessing JSONs + parquets (day_28/, day_29/)
-  tracker_eval/    Version-controlled tracker benchmark artefacts (video manifest, keyframes, ablation configs, scored results)
-ext-data/          Symlink to large data outputs (results, image sequences, embeddings, etc.)
+  results/         Pipeline outputs: tracking, classification, clustering
 ```
 
-| Stage                                          | Docs                                                 | Environment                |
-| ---------------------------------------------- | ---------------------------------------------------- | -------------------------- |
-| 1. Data (TO-DO: Zenodo deposit in preparation) | [data/README.md](data/README.md)                     | —                          |
-| 2. Tracking                                    | [docs/2_tracking.md](docs/2_tracking.md)             | `tracker`, `gs2`           |
-| 3. Tracker evaluation _(optional)_             | [docs/3_tracker_eval.md](docs/3_tracker_eval.md)     | `tracker`, `gs2`           |
-| 4. Postprocessing                              | [docs/4_postprocessing.md](docs/4_postprocessing.md) | `tracker`                  |
-| 5. Build dataset                               | [docs/5_dataset.md](docs/5_dataset.md)               | `tracker`                  |
-| 6. Embeddings                                  | [docs/6_embeddings.md](docs/6_embeddings.md)         | `embeddings`, `videoprism` |
-| 7. Classification                              | [docs/7_classification.md](docs/7_classification.md) | `classifier`               |
+| Stage                                          | Docs                                                 | Environment             |
+| ---------------------------------------------- | ---------------------------------------------------- | ----------------------- |
+| 1. Data (TO-DO: Zenodo deposit in preparation) | [data/README.md](data/README.md)                     | —                       |
+| 2. Tracking                                    | [docs/2_tracking.md](docs/2_tracking.md)             | `tracker`, `gs2`        |
+| 3. Tracker evaluation _(optional)_             | [docs/3_tracker_eval.md](docs/3_tracker_eval.md)     | `tracker`, `gs2`        |
+| 4. Postprocessing                              | [docs/4_postprocessing.md](docs/4_postprocessing.md) | `tracker`               |
+| 5. Build dataset                               | [docs/5_dataset.md](docs/5_dataset.md)               | `default`               |
+| 6. Embeddings                                  | [docs/6_embeddings.md](docs/6_embeddings.md)         | `default`, `videoprism` |
+| 7. Classification                              | [docs/7_classification.md](docs/7_classification.md) | `default`               |
 
 ### Analysis
 
-| Stage                                                                 | Docs                                     | Environment  |
-| --------------------------------------------------------------------- | ---------------------------------------- | ------------ |
-| 8. Analysis (clustering, classification figures, feature attribution) | [docs/8_analysis.md](docs/8_analysis.md) | `classifier` |
+| Stage                                                                 | Docs                                     | Environment |
+| --------------------------------------------------------------------- | ---------------------------------------- | ----------- |
+| 8. Analysis (clustering, classification figures, feature attribution) | [docs/8_analysis.md](docs/8_analysis.md) | `default`   |
 
 ### Tests
 
 ```sh
 # 1. Labels, postprocessing, windows (fast, ~seconds)
-pixi run -e dataset build_dataset
+pixi run build_dataset
 
 pixi run test_features                    # Feature extraction unit tests (pytest)
 pixi run test_postprocessing              # Postprocessing logic unit tests (pytest)
