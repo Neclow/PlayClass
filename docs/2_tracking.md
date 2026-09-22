@@ -1,9 +1,11 @@
 # Tracking
 
-Multi-object tracking pipeline supporting SAM 3, Grounded-SAM-2, and YOLO backends. Each tracker variant has its own YAML config in `config/` — see [`config/README.md`](../config/README.md) for the full variant table.
+Multi-object tracking pipeline supporting SAM 3, Grounded-SAM-2, and YOLO
+backends. Each tracker variant has its own YAML config in `config/` — see
+[`config/README.md`](../config/README.md) for the full variant table.
 
-> [!IMPORTANT]
-> Set `video_path` or `video_dir` in your config before running. Requires CUDA GPU.
+> [!IMPORTANT] Set `video_path` or `video_dir` in your config before running.
+> Requires CUDA GPU.
 
 ## Commands
 
@@ -28,7 +30,8 @@ pixi run eval_sam3 --overwrite   # re-track even if output exists
 pixi run -e tracker test_tracker
 ```
 
-GS2 variants run in the `gs2` environment; all others use `tracker`. The `track_all` / `eval_all` scripts handle this automatically.
+GS2 variants run in the `gs2` environment; all others use `tracker`. The
+`track_all` / `eval_all` scripts handle this automatically.
 
 ## Output layout
 
@@ -54,16 +57,17 @@ data/results/tracking/{config_stem}/
 
 ## Chunking modes (SAM 3)
 
-| Mode | Config key | Description |
-| ------ | ----------- | ------------- |
-| **Adaptive** | `use_adaptive_chunking: true` | YOLO pre-scan finds high-separation windows; boundaries placed within ±`adaptive_search_window_seconds`. |
-| **Fixed** | `use_adaptive_chunking: false` | Uniform segments of `chunk_seconds`. |
-| **Manual** | `manual_chunk_frames: [[0,375], ...]` | Explicit `[start, end]` frame pairs. |
-| **Reuse** | `reuse_chunk_info: true` + `reuse_run_dir` | Load boundaries from a previous run. |
+| Mode         | Config key                                 | Description                                                                                              |
+| ------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **Adaptive** | `use_adaptive_chunking: true`              | YOLO pre-scan finds high-separation windows; boundaries placed within ±`adaptive_search_window_seconds`. |
+| **Fixed**    | `use_adaptive_chunking: false`             | Uniform segments of `chunk_seconds`.                                                                     |
+| **Manual**   | `manual_chunk_frames: [[0,375], ...]`      | Explicit `[start, end]` frame pairs.                                                                     |
+| **Reuse**    | `reuse_chunk_info: true` + `reuse_run_dir` | Load boundaries from a previous run.                                                                     |
 
 ## Recomputing chunk boundaries
 
-Recompute YOLO scan metrics and chunk boundaries from an existing run without re-running SAM 3:
+Recompute YOLO scan metrics and chunk boundaries from an existing run without
+re-running SAM 3:
 
 ```sh
 pixi run -e tracker python -m pipeline.compute_chunk_boundaries \

@@ -95,3 +95,6 @@ agent-log/
 # Zenodo data prep
 scripts/prepare_zenodo.sh
 playclass_data.tar.gz
+
+# Precommit stuff
+node_modules/
