@@ -2,11 +2,8 @@
 YOLO-based raw inference scan.
 
 Runs YOLO+ByteTrack on a video and returns a per-detection DataFrame
-(``yolo_tracking.parquet``).  All downstream analysis — per-frame metrics,
-occlusion periods, separation windows, and adaptive chunking — lives in
-``src.yolo.boundaries``.
-
-Re-exports from ``src.yolo.boundaries`` are provided so that existing callers continue to work unchanged.
+(``yolo_tracking.parquet``).  Per-frame metrics (occlusion, separation,
+clustering) are computed by ``src.tracking.metrics``.
 """
 
 from pathlib import Path
