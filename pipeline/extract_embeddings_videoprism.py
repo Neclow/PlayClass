@@ -51,7 +51,7 @@ tf.config.set_visible_devices([], "TPU")
 
 from src._config import (
     DEFAULT_DATASET_DIR,
-    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_TRACKING_DIR,
     DEFAULT_VIDEO_DIR,
 )
 from src.dataset.crops import CROP_MODES
@@ -67,7 +67,18 @@ def parse_args():
         description="Extract VideoPrism embeddings from tracked objects."
     )
     parser.add_argument("--dataset-dir", type=Path, default=DEFAULT_DATASET_DIR)
-    parser.add_argument("--tracking-dir", type=Path, default=DEFAULT_POSTPROCESSING_DIR)
+    parser.add_argument(
+        "--tracking-model",
+        type=str,
+        default="sam3_best",
+        help="Tracking model subdirectory under the tracking results dir.",
+    )
+    parser.add_argument(
+        "--tracking-dir",
+        type=Path,
+        default=None,
+        help="Override: explicit tracking dir (ignores --tracking-model).",
+    )
     parser.add_argument(
         "--video-dir",
         type=Path,
@@ -107,6 +118,11 @@ def parse_args():
         help="Save per-timestep spatial-mean-pooled tokens (T, D) per window",
     )
     parser.add_argument("--output-name", type=str, default=None)
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Process only 1 video and 2 windows, skip save. For smoke-testing.",
+    )
     return parser.parse_args()
 
 
@@ -128,6 +144,9 @@ def _build_output_name(args):
 
 def main():
     args = parse_args()
+
+    if args.tracking_dir is None:
+        args.tracking_dir = Path(DEFAULT_TRACKING_DIR) / args.tracking_model
 
     # Auto-set num_frames based on model variant
     if args.num_frames is None:
@@ -152,6 +171,14 @@ def main():
     tracks = pd.read_parquet(tracks_path, columns=load_cols)
     video_ids = sorted(tracks["video_id"].unique())
     logger.info(f"Loaded {len(tracks)} track rows across {len(video_ids)} video(s)")
+
+    if args.dry_run:
+        video_ids = video_ids[:1]
+        first_windows = tracks[tracks["video_id"] == video_ids[0]]["window"].unique()[:2]
+        tracks = tracks[
+            (tracks["video_id"] == video_ids[0]) & (tracks["window"].isin(first_windows))
+        ]
+        logger.info(f"Dry run: 1 video, {len(first_windows)} window(s), {len(tracks)} rows")
 
     # Load model
     logger.info(f"Loading model: {args.model_name}")
@@ -194,22 +221,30 @@ def main():
     if not all_embeddings:
         raise ValueError("No embeddings extracted.")
 
-    # Check alignment with labels
-    assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
+    if args.dry_run:
+        sample_key = next(iter(all_embeddings))
+        sample_val = all_embeddings[sample_key]
+        shape = sample_val.shape if hasattr(sample_val, "shape") else "?"
+        logger.info(
+            f"Dry run complete: {len(all_embeddings)} groups, sample shape {shape}"
+        )
+    else:
+        # Check alignment with labels
+        assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
 
-    # Convert numpy arrays to torch tensors and save
-    torch_embeddings = {
-        k: torch.from_numpy(v.astype(np.float32)) for k, v in all_embeddings.items()
-    }
+        # Convert numpy arrays to torch tensors and save
+        torch_embeddings = {
+            k: torch.from_numpy(v.astype(np.float32)) for k, v in all_embeddings.items()
+        }
 
-    output_name = args.output_name or _build_output_name(args)
-    output_path = args.dataset_dir / output_name
-    torch.save(torch_embeddings, output_path)
+        output_name = args.output_name or _build_output_name(args)
+        output_path = args.dataset_dir / output_name
+        torch.save(torch_embeddings, output_path)
 
-    sample_key = next(iter(torch_embeddings))
-    sample_shape = torch_embeddings[sample_key].shape
-    logger.info(f"Saved {len(torch_embeddings)} embeddings to {output_path}")
-    logger.info(f"Embedding shape per window: {sample_shape}")
+        sample_key = next(iter(torch_embeddings))
+        sample_shape = torch_embeddings[sample_key].shape
+        logger.info(f"Saved {len(torch_embeddings)} embeddings to {output_path}")
+        logger.info(f"Embedding shape per window: {sample_shape}")
     logger.info("Done.")
 
 

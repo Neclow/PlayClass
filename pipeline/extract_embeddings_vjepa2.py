@@ -5,17 +5,6 @@ Unlike DINOv3 extraction (per-frame CLS tokens), this feeds K frames per
 window as a single video clip through a spatiotemporal backbone and
 mean-pools the output tokens into one embedding per window.
 
-Usage::
-
-    # V-JEPA 2 (HF)
-    pixi run -e tracker python -m script.extract_embeddings_vjepa2 \
-        --video-dir data/video/batch data/video/batch2 --device cuda:0
-
-    # V-JEPA 2.1 (torch.hub — requires one-time setup, see below)
-    pixi run -e tracker python -m script.extract_embeddings_vjepa2 \
-        --video-dir data/video/batch data/video/batch2 --device cuda:0 \
-        --model-name vjepa2_1_vit_large_384
-
 V-JEPA 2.1 setup (one-time)::
 
     bash script/setup_vjepa21.sh              # default: vjepa2_1_vit_large_384
@@ -38,7 +27,7 @@ from transformers import AutoModel, AutoVideoProcessor
 
 from src._config import (
     DEFAULT_DATASET_DIR,
-    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_TRACKING_DIR,
     DEFAULT_VIDEO_DIR,
 )
 from src.dataset.crops import CROP_MODES, needs_mask
@@ -61,9 +50,16 @@ def parse_args():
         default=DEFAULT_DATASET_DIR,
     )
     parser.add_argument(
+        "--tracking-model",
+        type=str,
+        default="sam3_best",
+        help="Tracking model subdirectory under the tracking results dir.",
+    )
+    parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_POSTPROCESSING_DIR,
+        default=None,
+        help="Override: explicit tracking dir (ignores --tracking-model).",
     )
     parser.add_argument(
         "--video-dir",
@@ -122,6 +118,11 @@ def parse_args():
         default=None,
         help="Path to CID checkpoint (encoder_only.pt) to load adapted weights",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Process only 1 video and 2 windows, skip save. For smoke-testing.",
+    )
     return parser.parse_args()
 
 
@@ -165,6 +166,9 @@ def _build_output_name(args):
 def main():
     args = parse_args()
 
+    if args.tracking_dir is None:
+        args.tracking_dir = Path(DEFAULT_TRACKING_DIR) / args.tracking_model
+
     tracks_path = args.dataset_dir / "tracks.parquet"
     if not tracks_path.exists():
         logger.error(f"tracks.parquet not found in {args.dataset_dir}")
@@ -180,6 +184,19 @@ def main():
     tracks = pd.read_parquet(tracks_path, columns=load_cols)
     video_ids = sorted(tracks["video_id"].unique())
     logger.info(f"Loaded {len(tracks)} track rows across {len(video_ids)} video(s)")
+
+    if args.dry_run:
+        video_ids = video_ids[:1]
+        first_windows = tracks[tracks["video_id"] == video_ids[0]]["window"].unique()[
+            :2
+        ]
+        tracks = tracks[
+            (tracks["video_id"] == video_ids[0])
+            & (tracks["window"].isin(first_windows))
+        ]
+        logger.info(
+            f"Dry run: 1 video, {len(first_windows)} window(s), {len(tracks)} rows"
+        )
 
     # Load model + processor
     device = torch.device(args.device)
@@ -237,24 +254,28 @@ def main():
         all_embeddings.update(emb_dict)
         logger.info(f"  {len(emb_dict)} window embeddings extracted")
 
-        if save_incremental:
-            # Save progress after each video to avoid OOM
+        if not args.dry_run:
+            # Checkpoint after every video: these runs are hours long, and a crash
+            # near the end would otherwise discard everything.
             torch.save(all_embeddings, output_path)
             logger.info(f"  Saved {len(all_embeddings)} total embeddings (incremental)")
 
     if not all_embeddings:
         raise ValueError("No embeddings extracted.")
 
-    # Check alignment with labels
-    assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
+    if args.dry_run:
+        sample_key = next(iter(all_embeddings))
+        logger.info(
+            f"Dry run complete: {len(all_embeddings)} groups, "
+            f"sample shape {all_embeddings[sample_key].shape}"
+        )
+    else:
+        # Check alignment with labels
+        assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
 
-    # Save
-    output_name = args.output_name or _build_output_name(args)
-    output_path = (
-        Path(output_name) if "/" in str(output_name) else args.dataset_dir / output_name
-    )
-    torch.save(all_embeddings, output_path)
-    logger.info(f"Saved {len(all_embeddings)} embeddings to {output_path}")
+        # Save
+        torch.save(all_embeddings, output_path)
+        logger.info(f"Saved {len(all_embeddings)} embeddings to {output_path}")
 
     del model, processor
     free_gpu_memory()

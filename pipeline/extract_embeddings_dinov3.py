@@ -23,7 +23,7 @@ from transformers import AutoImageProcessor, AutoModel
 
 from src._config import (
     DEFAULT_DATASET_DIR,
-    DEFAULT_POSTPROCESSING_DIR,
+    DEFAULT_TRACKING_DIR,
     DEFAULT_VIDEO_DIR,
 )
 from src.dataset.embeddings import extract_bodypart_embeddings, extract_embeddings
@@ -43,10 +43,16 @@ def parse_args():
         help="Directory containing tracks.parquet and labels.parquet.",
     )
     parser.add_argument(
+        "--tracking-model",
+        type=str,
+        default="sam3_best",
+        help="Tracking model subdirectory under the tracking results dir.",
+    )
+    parser.add_argument(
         "--tracking-dir",
         type=Path,
-        default=DEFAULT_POSTPROCESSING_DIR,
-        help="Root tracking dir for resolving video subdir names.",
+        default=None,
+        help="Override: explicit tracking dir (ignores --tracking-model).",
     )
     parser.add_argument(
         "--video-dir",
@@ -109,6 +115,11 @@ def parse_args():
         help="Extract body-part-pooled embeddings (tip_a + center + tip_b) using mask geometry. "
         "Output: (F_w, 3*D) per window.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Process only 1 video and 2 windows, skip save. For smoke-testing.",
+    )
     return parser.parse_args()
 
 
@@ -134,6 +145,9 @@ def _build_output_name(args) -> str:
 def main():
     args = parse_args()
 
+    if args.tracking_dir is None:
+        args.tracking_dir = Path(DEFAULT_TRACKING_DIR) / args.tracking_model
+
     tracks_path = args.dataset_dir / "tracks.parquet"
     if not tracks_path.exists():
         logger.error(f"tracks.parquet not found in {args.dataset_dir}")
@@ -152,6 +166,19 @@ def main():
     tracks = pd.read_parquet(tracks_path, columns=load_cols)
     video_ids = sorted(tracks["video_id"].unique())
     logger.info(f"Loaded {len(tracks)} track rows across {len(video_ids)} video(s)")
+
+    if args.dry_run:
+        video_ids = video_ids[:1]
+        first_windows = tracks[tracks["video_id"] == video_ids[0]]["window"].unique()[
+            :2
+        ]
+        tracks = tracks[
+            (tracks["video_id"] == video_ids[0])
+            & (tracks["window"].isin(first_windows))
+        ]
+        logger.info(
+            f"Dry run: 1 video, {len(first_windows)} window(s), {len(tracks)} rows"
+        )
 
     # Load model + processor once
     logger.info(f"Loading model: {args.model_name}")
@@ -219,14 +246,21 @@ def main():
     if not all_embeddings:
         raise ValueError("No embeddings extracted for any video.")
 
-    # Check alignment with labels
-    assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
+    if args.dry_run:
+        sample_key = next(iter(all_embeddings))
+        logger.info(
+            f"Dry run complete: {len(all_embeddings)} groups, "
+            f"sample shape {all_embeddings[sample_key].shape}"
+        )
+    else:
+        # Check alignment with labels
+        assert_embedding_label_alignment(set(all_embeddings.keys()), args.dataset_dir)
 
-    # Save embeddings keyed by (video_id, bird_id, window)
-    output_name = _build_output_name(args)
-    raw_path = args.dataset_dir / output_name
-    torch.save(all_embeddings, raw_path)
-    logger.info(f"Saved {len(all_embeddings)} embedding tensors: {raw_path}")
+        # Save embeddings keyed by (video_id, bird_id, window)
+        output_name = _build_output_name(args)
+        raw_path = args.dataset_dir / output_name
+        torch.save(all_embeddings, raw_path)
+        logger.info(f"Saved {len(all_embeddings)} embedding tensors: {raw_path}")
 
     # Cleanup
     del model, processor
