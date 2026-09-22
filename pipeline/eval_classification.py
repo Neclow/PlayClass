@@ -27,7 +27,6 @@ import pandas as pd
 
 from src._config import DEFAULT_CHECKPOINT_DIR, LABEL_ORDER
 
-
 # ---------------------------------------------------------------------------
 # evaluate: checkpoint-based inference
 # ---------------------------------------------------------------------------
@@ -51,11 +50,11 @@ def _build_dm_and_model_cls(cfg: dict):
     """Reconstruct datamodule and model class from a run config."""
     import torch
 
-    from pipeline.train import parse_input
     from src.classification.datamodule import BehaviourDataModule
     from src.classification.model_selection import LOCO
     from src.classification.models import MODEL_REGISTRY
     from src.classification.trainer import BehaviourClassifier
+    from src.classification.utils import parse_input
 
     use_features, use_embeddings, embeddings_files = parse_input(cfg["input"])
     backbone_cls, temporal = MODEL_REGISTRY[cfg["model"]]
@@ -131,7 +130,9 @@ def evaluate_run(run_dir: Path, device: str = "cuda:0", predictions: bool = True
         dataset_dir = Path(cfg.get("dataset_dir", "data/dataset"))
         labels_df = pd.read_parquet(dataset_dir / "labels.parquet")
         if exclude:
-            labels_df = labels_df[~labels_df["behav_label"].isin(exclude_list)].reset_index(drop=True)
+            labels_df = labels_df[
+                ~labels_df["behav_label"].isin(exclude_list)
+            ].reset_index(drop=True)
 
     class_names = list(dm._dataset.label_encoder.lab2ind.keys())
     torch_device = torch.device(device)
@@ -207,7 +208,9 @@ def evaluate_run(run_dir: Path, device: str = "cuda:0", predictions: bool = True
     if predictions and pred_rows:
         df = pd.DataFrame(pred_rows)
         prob_cols = [f"prob_{c}" for c in class_names]
-        df["pred_label"] = df[prob_cols].idxmax(axis=1).str.replace("prob_", "", regex=False)
+        df["pred_label"] = (
+            df[prob_cols].idxmax(axis=1).str.replace("prob_", "", regex=False)
+        )
         df.to_csv(run_dir / "predictions.csv", index=False)
         print(f"  Saved predictions.csv — {len(df)} rows")
 
@@ -483,7 +486,9 @@ def parse_args():
         action="store_false",
         help="Skip saving predictions.csv (faster).",
     )
-    ev.add_argument("--force", action="store_true", help="Re-run even if outputs exist.")
+    ev.add_argument(
+        "--force", action="store_true", help="Re-run even if outputs exist."
+    )
 
     # tables
     tb = sub.add_parser(
