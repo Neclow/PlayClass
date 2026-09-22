@@ -1,44 +1,93 @@
-"""
-Recompute chunk boundary metrics from an existing run dir.
+"""Recompute chunk boundary metrics from an existing run directory.
 
-Given a run dir that contains ``yolo_tracking.parquet``, this script:
-
-1. Recomputes per-frame metrics, occlusion periods, and separation windows
-2. Recomputes adaptive chunk boundaries
-3. Saves updated parquets in-place (metrics/yolo_scan_metrics.parquet,
-   metrics/yolo_scan_summary.parquet)
-4. Overwrites chunk_info.json
-5. Regenerates visualizations/yolo_scan_overview.png
-6. Generates visualizations/chunk_boundaries_<run>.png (frame screengrab grid)
-
-Tunable parameters live in the YAML config under ``yolo_scan:`` and at the
-top level (``chunk_seconds``, ``adaptive_max_chunk_seconds``, etc.).
-To tweak: edit the YAML copy in the run dir, then re-run this script.
+Given a run dir that contains ``yolo_tracking.parquet``, recomputes per-frame
+metrics, adaptive chunk boundaries, and saves updated outputs in-place.
 
 Usage::
 
-    pixi run -e sam3-hf python -m script.compute_chunk_boundaries \\
-        --run-dir ext-data/output/results/yolo_scan/20260223_231859_yolo_scan
+    pixi run -e tracker python -m pipeline.compute_chunk_boundaries \\
+        --run-dir data/results/tracking/{config_stem}/day_{N}/{video_stem}
 
-    # With a different config (tweaked params):
-    pixi run -e sam3-hf python -m script.compute_chunk_boundaries \\
-        --run-dir ext-data/output/results/yolo_scan/20260223_231859_yolo_scan \\
-        --config config/yolo_scan_only.yaml
+    pixi run -e tracker python -m pipeline.compute_chunk_boundaries \\
+        --run-dir data/results/tracking/{config_stem}/day_{N}/{video_stem} \\
+        --video-dir data/videos/day_{N}
 """
 
 import json
+
 from argparse import ArgumentParser
 from pathlib import Path
 
 import cv2
 import pandas as pd
+import yaml
+
 from loguru import logger
 from omegaconf import OmegaConf
 
 from src.metrics import compute_yolo_per_frame_metrics
-from src.tracker.chunking import chunk_video_frames_adaptive
-from src.tracker.scan import yolo_scan_to_df
-from src.viz import plot_chunk_boundary_frames, plot_yolo_scan_overview
+from src.tracking.chunking import chunk_video_frames_adaptive
+from src.tracking.scan import yolo_scan_to_df
+from src.tracking.viz import plot_chunk_boundary_frames, plot_yolo_scan_overview
+
+
+def _resolve_video_path(
+    run_dir: Path,
+    video_path_override: Path | None = None,
+    video_dir_override: Path | None = None,
+) -> Path | None:
+    """Resolve the video file from overrides, saved config, or common locations."""
+    video_stem = run_dir.name
+
+    if video_path_override is not None:
+        p = video_path_override.expanduser().resolve()
+        if p.exists():
+            return p
+        logger.warning(f"Video not found: {p}")
+        return None
+
+    if video_dir_override is not None:
+        candidate = video_dir_override / f"{video_stem}.mp4"
+        if candidate.exists():
+            return candidate
+        logger.warning(f"Video not found: {candidate}")
+
+    config_files = list(run_dir.glob("*.yaml"))
+    cfg = {}
+    if config_files:
+        with open(config_files[0], "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+
+    raw = cfg.get("video_path")
+    if raw is not None:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        if p.exists():
+            return p
+
+    raw_dir = cfg.get("video_dir")
+    if raw_dir is not None:
+        vdir = Path(raw_dir)
+        if not vdir.is_absolute():
+            vdir = Path.cwd() / vdir
+        candidate = vdir / f"{video_stem}.mp4"
+        if candidate.exists():
+            return candidate
+
+    for search_dir in [
+        Path.cwd() / "data" / "videos",
+    ]:
+        if not search_dir.exists():
+            continue
+        matches = list(search_dir.rglob(f"{video_stem}.mp4"))
+        if matches:
+            return matches[0]
+
+    logger.warning(
+        f"Could not find video for {video_stem}; use --video-path or --video-dir"
+    )
+    return None
 
 
 def parse_args():
@@ -72,9 +121,9 @@ def main():
     else:
         yaml_files = list(run_dir.glob("*.yaml"))
         assert yaml_files, f"No YAML config found in: {run_dir}"
-        assert len(yaml_files) == 1, (
-            f"Expected exactly one YAML in {run_dir}, found: {yaml_files}"
-        )
+        assert (
+            len(yaml_files) == 1
+        ), f"Expected exactly one YAML in {run_dir}, found: {yaml_files}"
         config_path = yaml_files[0]
 
     logger.info(f"Loading config: {config_path}")
@@ -194,7 +243,7 @@ def main():
         ]
     }
     chunk_info_path = run_dir / "chunk_info.json"
-    with open(chunk_info_path, "w") as f:
+    with open(chunk_info_path, "w", encoding="utf-8") as f:
         json.dump(chunk_info, f, indent=2)
     logger.info(f"Saved: {chunk_info_path}")
 

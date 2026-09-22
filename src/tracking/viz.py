@@ -2,9 +2,10 @@
 Visualization functions for SAM3 tracking metrics and diagnostics.
 """
 
-from collections import Counter
+import shutil
+import subprocess
+
 from pathlib import Path
-from typing import Optional, Sequence
 
 import cv2
 import matplotlib
@@ -17,6 +18,7 @@ import pandas as pd
 import pycocotools.mask as mask_util
 import supervision as sv
 import torch
+
 from loguru import logger
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
@@ -68,21 +70,35 @@ def draw_points_on_axes(
     """
     Draw prompt points on a matplotlib image axis.
 
-    Args:
-        ax: Axes with an image already shown.
-        points: Array-like of shape (N_objects, N_points_per_object, 2) in (x, y) coords.
-        colors: List of (R, G, B[, A]) tuples, one per object. Defaults to tab10.
-        marker: Marker style.
-        marker_size: Scatter marker size.
-        marker_edgecolor: Edge colour of each marker.
-        line: Draw a line connecting points within each object.
-        line_width: Width of connecting lines.
-        line_alpha: Opacity of connecting lines.
-        labels: Annotate each point with "object:point" index.
-        label_offset: (dx, dy) pixel offset for label text.
+    Parameters
+    ----------
+    ax : Axes
+        Axes with an image already shown.
+    points : array-like
+        Shape (N_objects, N_points_per_object, 2) in (x, y) coords.
+    colors : list of tuple, optional
+        (R, G, B[, A]) tuples, one per object. Defaults to tab10.
+    marker : str
+        Marker style.
+    marker_size : int
+        Scatter marker size.
+    marker_edgecolor : str
+        Edge colour of each marker.
+    line : bool
+        Draw a line connecting points within each object.
+    line_width : float
+        Width of connecting lines.
+    line_alpha : float
+        Opacity of connecting lines.
+    labels : bool
+        Annotate each point with "object:point" index.
+    label_offset : tuple
+        (dx, dy) pixel offset for label text.
 
-    Returns:
-        Dict with keys 'scatters', 'lines', and 'texts' listing the artists added.
+    Returns
+    -------
+    dict
+        Keys 'scatters', 'lines', and 'texts' listing the artists added.
     """
     pts = np.asarray(points, dtype=float)
     if pts.ndim != 3 or pts.shape[2] != 2:
@@ -179,7 +195,7 @@ def _format_mmss(seconds, _pos=None):
     return f"{m:02d}:{s:02d}"
 
 
-def _setup_time_xaxis(ax, frames, fps):
+def _setup_time_xaxis(ax, fps):
     """Configure x-axis as MM:SS if fps is available, else frame index."""
     if fps is not None:
         ax.set_xlabel("Time (MM:SS)")
@@ -350,13 +366,17 @@ def plot_id_timeline(tracking_df, per_frame_df=None, fps=None, save_path=None):
     Bars are color-coded by tracker_score (green=high, red=low).
     Optional trouble-spot overlay shades occlusion and count-change frames.
 
-    Args:
-        tracking_df: MultiIndex DataFrame (frame_idx, object_id) with
-                     'tracker_score' column.
-        per_frame_df: DataFrame with 'frame_idx', 'is_high_occlusion',
-                      'is_object_count_change' columns. Optional.
-        fps: Video frames per second (for MM:SS x-axis). None = frame index.
-        save_path: Path to save PNG. None = plt.show().
+    Parameters
+    ----------
+    tracking_df : pd.DataFrame
+        MultiIndex DataFrame (frame_idx, object_id) with 'tracker_score' column.
+    per_frame_df : pd.DataFrame, optional
+        DataFrame with 'frame_idx', 'is_high_occlusion',
+        'is_object_count_change' columns.
+    fps : float, optional
+        Video frames per second (for MM:SS x-axis). None = frame index.
+    save_path : str or Path, optional
+        Path to save PNG. None = plt.show().
     """
     fig, ax = plt.subplots(figsize=(14, 4))
 
@@ -441,7 +461,7 @@ def plot_id_timeline(tracking_df, per_frame_df=None, fps=None, save_path=None):
     ax.set_ylim(-0.5, len(object_ids) - 0.5)
 
     # X-axis
-    _setup_time_xaxis(ax, None, fps)
+    _setup_time_xaxis(ax, fps)
 
     # Colorbar for tracker score
     sm = ScalarMappable(cmap=cmap, norm=norm)
@@ -482,10 +502,14 @@ def plot_per_frame_dashboard(per_frame_df, fps=None, save_path=None):
     Panels: object count, max mask IoU, min centroid distance,
     clustering coefficient, mean mask area (with min/max band).
 
-    Args:
-        per_frame_df: DataFrame with per-frame metric columns.
-        fps: Video FPS for MM:SS x-axis. None = frame index.
-        save_path: Path to save PNG. None = plt.show().
+    Parameters
+    ----------
+    per_frame_df : pd.DataFrame
+        DataFrame with per-frame metric columns.
+    fps : float, optional
+        Video FPS for MM:SS x-axis. None = frame index.
+    save_path : str or Path, optional
+        Path to save PNG. None = plt.show().
     """
     frames = per_frame_df["frame_idx"].values
     x = np.array([_frame_to_x(f, fps) for f in frames])
@@ -543,7 +567,7 @@ def plot_per_frame_dashboard(per_frame_df, fps=None, save_path=None):
     ax.legend(fontsize=8, loc="upper right")
 
     # Shared x-axis
-    _setup_time_xaxis(axes[-1], frames, fps)
+    _setup_time_xaxis(axes[-1], fps)
 
     fig.tight_layout()
     _save_or_show(fig, save_path)
@@ -563,11 +587,15 @@ def plot_per_id_scores(tracking_df, fps=None, save_path=None):
     object_score_logits). Falls back to 'tracker_score' if 'scores' has
     no valid data.
 
-    Args:
-        tracking_df: MultiIndex DataFrame (frame_idx, object_id) with
-                     'scores' and/or 'tracker_score' columns.
-        fps: Video FPS for MM:SS x-axis. None = frame index.
-        save_path: Path to save PNG. None = plt.show().
+    Parameters
+    ----------
+    tracking_df : pd.DataFrame
+        MultiIndex DataFrame (frame_idx, object_id) with 'scores' and/or
+        'tracker_score' columns.
+    fps : float, optional
+        Video FPS for MM:SS x-axis. None = frame index.
+    save_path : str or Path, optional
+        Path to save PNG. None = plt.show().
     """
     fig, ax = plt.subplots(figsize=(14, 4))
 
@@ -590,7 +618,7 @@ def plot_per_id_scores(tracking_df, fps=None, save_path=None):
 
     ax.set_ylabel("Object Score")
     ax.set_ylim(-0.05, 1.05)
-    _setup_time_xaxis(ax, None, fps)
+    _setup_time_xaxis(ax, fps)
     ax.legend(fontsize=8, loc="lower right")
     ax.set_title("Per-ID Object Score Over Time")
 
@@ -671,12 +699,18 @@ def plot_mask_evolution(tracking_df, chunk_info, video_path, fps=None, output_di
     Creates a 2x3 grid per boundary showing frames around the transition
     with segmentation masks overlaid, bounding boxes, and tracker scores.
 
-    Args:
-        tracking_df: MultiIndex DataFrame (frame_idx, object_id).
-        chunk_info: Dict with 'chunks' key (from chunk_info.json).
-        video_path: Path to the source video file.
-        fps: Video FPS for time labels.
-        output_dir: Directory to save PNGs. None = plt.show().
+    Parameters
+    ----------
+    tracking_df : pd.DataFrame
+        MultiIndex DataFrame (frame_idx, object_id).
+    chunk_info : dict
+        Dict with 'chunks' key (from chunk_info.json).
+    video_path : str or Path
+        Path to the source video file.
+    fps : float, optional
+        Video FPS for time labels.
+    output_dir : str or Path, optional
+        Directory to save PNGs. None = plt.show().
     """
     boundaries = _get_chunk_boundaries(chunk_info)
     if not boundaries:
@@ -873,12 +907,18 @@ def plot_prompt_points(tracking_df, chunk_info, video_path, fps=None, output_dir
     - Right: First frame of next chunk with same point markers
     Border points (within 50px of frame edge) are highlighted in red.
 
-    Args:
-        tracking_df: MultiIndex DataFrame (frame_idx, object_id).
-        chunk_info: Dict with 'chunks' key (from chunk_info.json).
-        video_path: Path to the source video file.
-        fps: Video FPS for time labels.
-        output_dir: Directory to save PNGs. None = plt.show().
+    Parameters
+    ----------
+    tracking_df : pd.DataFrame
+        MultiIndex DataFrame (frame_idx, object_id).
+    chunk_info : dict
+        Dict with 'chunks' key (from chunk_info.json).
+    video_path : str or Path
+        Path to the source video file.
+    fps : float, optional
+        Video FPS for time labels.
+    output_dir : str or Path, optional
+        Directory to save PNGs. None = plt.show().
     """
     boundaries = _get_chunk_boundaries(chunk_info)
     if not boundaries:
@@ -1005,14 +1045,20 @@ def plot_yolo_scan_overview(
     high-occlusion flag. Occlusion periods are shaded in red across all panels.
     Chunk boundaries (re-initialization points) are shown as vertical lines.
 
-    Args:
-        yolo_scan_df: DataFrame from yolo_scan_to_df() with columns
-            frame_idx, num_objects, max_pairwise_bbox_iou,
-            clustering_coefficient, is_high_occlusion, mean_confidence.
-        occlusion_periods: List of (start_frame, end_frame) tuples. Optional.
-        chunk_boundaries: List of frame indices where chunks start (tracker re-init). Optional.
-        fps: Video FPS for MM:SS x-axis. None = frame index.
-        save_path: Path to save PNG. None = plt.show().
+    Parameters
+    ----------
+    yolo_scan_df : pd.DataFrame
+        DataFrame from yolo_scan_to_df() with columns frame_idx, num_objects,
+        max_pairwise_bbox_iou, clustering_coefficient, is_high_occlusion,
+        mean_confidence.
+    occlusion_periods : list of tuple, optional
+        (start_frame, end_frame) tuples.
+    chunk_boundaries : list of int, optional
+        Frame indices where chunks start (tracker re-init).
+    fps : float, optional
+        Video FPS for MM:SS x-axis. None = frame index.
+    save_path : str or Path, optional
+        Path to save PNG. None = plt.show().
     """
     frames = yolo_scan_df["frame_idx"].values
     x = np.array([_frame_to_x(f, fps) for f in frames])
@@ -1134,7 +1180,7 @@ def plot_yolo_scan_overview(
     if legend_handles:
         axes[0].legend(handles=legend_handles, fontsize=8, loc="upper right")
 
-    _setup_time_xaxis(axes[-1], frames, fps)
+    _setup_time_xaxis(axes[-1], fps)
 
     fig.tight_layout()
     _save_or_show(fig, save_path)
@@ -1158,15 +1204,24 @@ def generate_all_visualizations(
     """
     Generate all tracking visualizations and save to output_dir.
 
-    Args:
-        tracking_df: MultiIndex DataFrame from process_tracking_outputs.
-        per_frame_df: DataFrame from per_frame_metrics_to_df.
-        output_dir: Directory to save PNG files.
-        fps: Video FPS for MM:SS axis labels.
-        chunk_info: Dict with 'chunks' key for diagnostic plots. Optional.
-        video_path: Path to source video for diagnostic plots. Optional.
-        yolo_scan_df: DataFrame from yolo_scan_to_df. Optional.
-        yolo_occlusion_periods: List of (start, end) frame tuples. Optional.
+    Parameters
+    ----------
+    tracking_df : pd.DataFrame
+        MultiIndex DataFrame from process_tracking_outputs.
+    per_frame_df : pd.DataFrame
+        DataFrame from per_frame_metrics_to_df.
+    output_dir : str or Path
+        Directory to save PNG files.
+    fps : float, optional
+        Video FPS for MM:SS axis labels.
+    chunk_info : dict, optional
+        Dict with 'chunks' key for diagnostic plots.
+    video_path : str or Path, optional
+        Path to source video for diagnostic plots.
+    yolo_scan_df : pd.DataFrame, optional
+        DataFrame from yolo_scan_to_df.
+    yolo_occlusion_periods : list of tuple, optional
+        (start, end) frame tuples.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1246,18 +1301,24 @@ def plot_chunk_boundary_frames(
     save_path=None,
 ):
     """
-    N-row × 2-col grid of start and end frames for each chunk.
+    N-row x 2-col grid of start and end frames for each chunk.
 
     Each cell is annotated with chunk index, model type, frame number,
     timestamp, and n_obj (from yolo_scan_df when available).
 
-    Args:
-        chunk_info: Dict with 'chunks' key (same format as chunk_info.json).
-        video_path: Path to the source video file.
-        fps: Video frame rate for timestamp formatting. Defaults to 25.
-        yolo_scan_df: DataFrame from yolo_scan_to_df — used for n_obj labels.
-            Optional; cells show '?' when not provided.
-        save_path: Path to save the PNG. If None the plot is shown interactively.
+    Parameters
+    ----------
+    chunk_info : dict
+        Dict with 'chunks' key (same format as chunk_info.json).
+    video_path : str or Path
+        Path to the source video file.
+    fps : float, optional
+        Video frame rate for timestamp formatting. Defaults to 25.
+    yolo_scan_df : pd.DataFrame, optional
+        DataFrame from yolo_scan_to_df — used for n_obj labels.
+        Cells show '?' when not provided.
+    save_path : str or Path, optional
+        Path to save the PNG. If None the plot is shown interactively.
     """
     video_path = Path(video_path)
     if not video_path.exists():
@@ -1445,3 +1506,120 @@ def annotate_video_with_sam3_outputs(
         callback=callback,
         show_progress=True,
     )
+
+
+def write_annotated_clip(
+    frames,
+    outputs_per_frame: dict,
+    target_path,
+    fps: float = 25.0,
+    crf: int = 23,
+):
+    """Render an annotated clip from in-memory RGB frames + SAM3 outputs.
+
+    A lightweight counterpart to :func:`annotate_video_with_sam3_outputs` that
+    annotates frames already decoded into memory (e.g. a single re-tracked scene
+    in the cleanup notebook) instead of re-decoding a source video file. Reuses
+    :func:`create_annotation_callback`, so the overlay style matches the
+    full-video annotation exactly.
+
+    When system ``ffmpeg`` is available the clip is encoded as H.264 / yuv420p
+    with ``+faststart`` — directly playable in a browser/notebook ``<video>`` and
+    small enough to embed or rsync. Otherwise it falls back to OpenCV's ``mp4v``
+    writer (widely decodable, but not HTML5-playable in most browsers).
+
+    Parameters
+    ----------
+    frames : sequence of ndarray
+        (H, W, 3) RGB uint8 arrays (as returned by ``load_video_frames_*``
+        in ``src.io``).
+    outputs_per_frame : dict
+        Keyed by LOCAL index into ``frames`` (re-key a global-frame dict with
+        the notebook's ``globalkey_to_local``). Values are SAM3 output dicts
+        with ``masks``/``boxes``/``object_ids``/``scores``. Frames absent from
+        the dict are written unannotated.
+    target_path : str or Path
+        Output ``.mp4`` path (parent dirs are created).
+    fps : float
+        Output frame rate.
+    crf : int
+        H.264 quality (lower = better/larger); ignored for the mp4v fallback.
+
+    Returns
+    -------
+    Path
+        Path to the written clip.
+    """
+    if len(frames) == 0:
+        raise ValueError("write_annotated_clip: no frames to write")
+
+    callback = create_annotation_callback(outputs_per_frame)
+    target_path = Path(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    h, w = np.asarray(frames[0]).shape[:2]
+
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is not None:
+        proc = subprocess.Popen(
+            [
+                ffmpeg,
+                "-y",
+                "-loglevel",
+                "error",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "bgr24",
+                "-s",
+                f"{w}x{h}",
+                "-r",
+                str(fps),
+                "-i",
+                "-",
+                "-an",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-crf",
+                str(crf),
+                # yuv420p requires even dimensions
+                "-vf",
+                "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-movflags",
+                "+faststart",
+                str(target_path),
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        for i, frame in enumerate(frames):
+            bgr = cv2.cvtColor(np.ascontiguousarray(frame), cv2.COLOR_RGB2BGR)
+            proc.stdin.write(
+                np.ascontiguousarray(callback(bgr, i), dtype=np.uint8).tobytes()
+            )
+        proc.stdin.close()
+        if proc.wait() != 0:
+            err = proc.stderr.read().decode("utf-8", "replace")
+            raise RuntimeError(f"ffmpeg failed:\n{err}")
+    else:
+        logger.warning(
+            "ffmpeg not found — falling back to mp4v (may not play in a browser/notebook)."
+        )
+        writer = cv2.VideoWriter(
+            str(target_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h)
+        )
+        if not writer.isOpened():
+            raise RuntimeError(f"could not open VideoWriter for {target_path}")
+        try:
+            for i, frame in enumerate(frames):
+                bgr = cv2.cvtColor(np.ascontiguousarray(frame), cv2.COLOR_RGB2BGR)
+                writer.write(callback(bgr, i))
+        finally:
+            writer.release()
+
+    logger.info(
+        f"Wrote annotated clip: {target_path} ({len(frames)} frames @ {fps:g} fps)"
+    )
+    return target_path

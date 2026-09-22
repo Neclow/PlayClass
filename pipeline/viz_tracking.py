@@ -1,7 +1,7 @@
 """
 Regenerate all tracking visualizations from a completed run directory.
 
-Wraps src.viz.generate_all_visualizations, loading all inputs from the saved
+Wraps src.tracking.viz.generate_all_visualizations, loading all inputs from the saved
 artefacts in the run directory. Works for both full SAM3 tracking runs and
 YOLO-scan-only runs.
 
@@ -29,6 +29,7 @@ import json
 import shutil
 import subprocess
 import sys
+
 from pathlib import Path
 
 import cv2
@@ -37,11 +38,11 @@ import pandas as pd
 import pycocotools.mask as mask_util
 import supervision as sv
 import yaml
+
 from loguru import logger
 
 from src.tracker.scan import identify_occlusion_periods
-from src.viz import generate_all_visualizations
-
+from src.tracking.viz import generate_all_visualizations
 
 # ---------------------------------------------------------------------------
 # Video path resolution

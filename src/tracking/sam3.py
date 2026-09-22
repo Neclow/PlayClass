@@ -41,7 +41,6 @@ from ..metrics import (
     per_run_metrics_to_multiindex_df,
     summary_metrics_to_df,
 )
-from ..viz import annotate_video_with_sam3_outputs, generate_all_visualizations
 from .chunking import (
     build_manual_chunks,
     chunk_video_frames_adaptive,
@@ -59,6 +58,7 @@ from .utils import (
     process_tracking_outputs,
     reseed_tracker_memory,
 )
+from .viz import annotate_video_with_sam3_outputs, generate_all_visualizations
 
 # Allow TF32 on Ampere+ GPUs — ~2x faster matmul with negligible precision loss
 torch.backends.cuda.matmul.allow_tf32 = True
