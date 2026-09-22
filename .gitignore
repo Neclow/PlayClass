@@ -76,13 +76,13 @@ notes/
 paper/
 papers/
 scrapbook/
+pixi.toml.bak
 
 # Shelved experiments
 shelf/
 sandbox/
 
 # Generated / local-only
-.matplotlib/
 img/
 
 # AGENTS
