@@ -3,7 +3,7 @@
 Writes the grid CSV and scaled array to the clustering output directory.
 Run once per dataset release; the figure notebook reads the outputs.
 
-    pixi run -e classifier python -m pipeline.clustering_grid
+    pixi run clustering_grid
 """
 
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser

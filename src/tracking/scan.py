@@ -351,7 +351,7 @@ def run_yolo_scan(
     except ImportError as exc:
         raise ImportError(
             "ultralytics is required for YOLO scan. "
-            "Install it with: pixi install -e sam3-hf"
+            "Install it with: pixi install"
         ) from exc
 
     video_path = str(video_path)

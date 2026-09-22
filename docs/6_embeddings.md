@@ -18,16 +18,16 @@ run.
 
 ```sh
 # Default: ViT-L, bbox crop
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29
 
 # ViT-B backbone
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29 \
     --model-name facebook/dinov3-vitb16-pretrain-lvd1689m
 
 # Custom resolution (DINOv3 was trained at 256; supports up to 768)
-pixi run -e embeddings extract_embeddings_dinov3 \
+pixi run extract_dinov3 \
     --video-dir data/videos/day_28 data/videos/day_29 --resolution 256
 ```
 
@@ -41,7 +41,7 @@ auto-generated from args).
 ### V-JEPA 2 (HuggingFace) — no setup needed
 
 ```sh
-pixi run -e embeddings python -m pipeline.extract_embeddings_vjepa2 \
+pixi run extract_vjepa2 \
     --video-dir data/videos --device cuda:0 --temporal
 ```
 
@@ -69,7 +69,7 @@ Available models:
 Then extract:
 
 ```sh
-pixi run -e embeddings python -m pipeline.extract_embeddings_vjepa2 \
+pixi run extract_vjepa2 \
     --video-dir data/videos/day_28 data/videos/day_29 \
     --device cuda:0 --temporal \
     --model-name vjepa2_1_vit_large_384

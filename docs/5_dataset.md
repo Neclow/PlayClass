@@ -22,7 +22,7 @@ each other — run them in parallel if you have the resources.
 ## Step 1 — Labels, postprocessing, windows
 
 ```sh
-pixi run -e dataset build_dataset
+pixi run python -m pipeline.build_dataset
 ```
 
 **What it does:**
@@ -47,7 +47,7 @@ by `(video_id, bird_id, window)`.
 ## Step 2 — Mask features (CPU)
 
 ```sh
-pixi run -e dataset extract_features
+pixi run python -m pipeline.extract_features
 ```
 
 **What it does:** Decodes the RLE masks in `tracks.parquet` frame-by-frame and
@@ -87,10 +87,10 @@ CV, q10, q90 → `features_windowed.parquet`).
 
 ```sh
 # DINOv3 ViT-L (default)
-pixi run -e embeddings extract_embeddings_dinov3
+pixi run extract_dinov3
 
 # V-JEPA 2.1 ViT-L temporal
-pixi run -e embeddings python -m pipeline.extract_embeddings_vjepa2 --temporal
+pixi run extract_vjepa2 --temporal
 
 # VideoPrism Base temporal
 pixi run -e videoprism extract_videoprism --temporal

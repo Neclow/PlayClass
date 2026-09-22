@@ -25,5 +25,5 @@ Four clustering algorithms are compared (defined in `src/clustering`):
 ## Reproducing
 
 ```sh
-pixi run -e classifier python -m pipeline.clustering_grid
+pixi run clustering_grid
 ```
