@@ -51,6 +51,7 @@ from .metrics import (
     per_run_metrics_to_multiindex_df,
     summary_metrics_to_df,
 )
+from .._config import DEFAULT_TRACKER_CONFIG
 from .scan import run_yolo_scan, yolo_scan_to_df
 from .utils import (
     extract_equidistant_points_from_masks,
@@ -531,7 +532,7 @@ def _run_single_video(cfg, run_dir: Path, config_path: Path | None = None):
             model_name=yolo_cfg.get("model", "model/yolo26x.pt"),
             conf_thresh=yolo_cfg.get("conf_thresh", 0.25),
             iou_thresh=yolo_cfg.get("iou_thresh", 0.45),
-            tracker_config=yolo_cfg.get("tracker_config", "data/yolo/bytetrack.yaml"),
+            tracker_config=yolo_cfg.get("tracker_config", DEFAULT_TRACKER_CONFIG),
             allowed_classes=(
                 set(yolo_cfg.get("allowed_classes", []))
                 if yolo_cfg.get("allowed_classes")

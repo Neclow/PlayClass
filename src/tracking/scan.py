@@ -20,6 +20,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 from tqdm import tqdm
 
+from .._config import DEFAULT_TRACKER_CONFIG
 from ..memory import free_gpu_memory
 from .metrics import compute_separation_score, compute_yolo_per_frame_metrics
 
@@ -300,7 +301,7 @@ def run_yolo_scan(
     model_name: str = "model/yolo26x.pt",
     conf_thresh: float = 0.25,
     iou_thresh: float = 0.45,
-    tracker_config: str = "data/yolo/bytetrack.yaml",
+    tracker_config: str = DEFAULT_TRACKER_CONFIG,
     allowed_classes: set[str] | None = None,
     window_seconds: float = 1.0,
     high_occlusion_threshold: float = 0.3,
@@ -313,7 +314,7 @@ def run_yolo_scan(
     output_video_path: str | Path | None = None,
 ) -> Dict[str, Any]:
     """
-    Run YOLO+ByteTrack inference on a video and compute scan results.
+    Run YOLO+BoTSORT inference on a video and compute scan results.
 
     Loads a YOLO model, runs tracking with ``model.track(stream=True)``,
     builds a per-detection DataFrame, then delegates to
@@ -329,7 +330,7 @@ def run_yolo_scan(
         model_name: YOLO model weight file.
         conf_thresh: Confidence threshold for detections.
         iou_thresh: IoU threshold for NMS.
-        tracker_config: Path to ByteTrack YAML config.
+        tracker_config: Path to tracker YAML config.
         allowed_classes: Set of class name strings to keep. ``None`` keeps all.
         window_seconds: Sliding window for occlusion period detection.
         high_occlusion_threshold: Fraction of flagged frames in window.
