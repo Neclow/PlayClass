@@ -10,18 +10,19 @@ from pathlib import Path
 
 import pytest
 import torch
-
 from PIL import Image
 
-from src.utils.io import load_video_frames_torchcodec as load_video_frames
+from src._config import DEFAULT_VIDEO_DIR
 from src.tracking.viz import overlay_masks
+from src.utils.io import load_video_frames_torchcodec as load_video_frames
 
+VIDEO_DIR = Path(DEFAULT_VIDEO_DIR)
 TEXT = "bird"
 START_IDX = 10
 N_GROUNDING_FRAMES = 125
 VIDEO_PATH = Path(
-    "data/video/sample_footage.mp4"
-)  # Placeholder path, bring your own test footage
+    VIDEO_DIR / "day_28" / "C5G2_Test_1_day_28_1_Camera_5_2025_02_04_11_35_00_2.mp4"
+)
 
 pytestmark = [
     pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"),
@@ -135,9 +136,9 @@ class TestSam3VideoInference:
         first_ids = set(outputs_per_frame[sorted_frames[0]]["object_ids"].tolist())
         for frame_idx in sorted_frames[1:]:
             frame_ids = set(outputs_per_frame[frame_idx]["object_ids"].tolist())
-            assert first_ids.issubset(
-                frame_ids
-            ), f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
+            assert first_ids.issubset(frame_ids), (
+                f"Frame {frame_idx} missing IDs: {first_ids - frame_ids}"
+            )
 
     def test_output_keys(self, outputs_per_frame):
         """Each frame output should contain expected keys."""
