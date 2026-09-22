@@ -1,6 +1,6 @@
 """Select annotation frames for the tracker-eval ground-truth pass.
 
-For each selected video in ``data/tracker_eval/video_manifest.csv`` (selected=True),
+For each selected video in ``data/results/eval_tracking/video_manifest.csv`` (selected=True),
 this script:
 
 Output: ``data/results/eval_tracking/annotation_frames.csv`` (video_id, frame_idx, source).

@@ -5,9 +5,9 @@ Reads sparse GT (from `cvat_to_mot.py`) and dense predictions (from
 (A_yolo_botsort, B_gs2_strict, B_gs2_fixed, C_sam3_frame_zero,
 D_sam3_fixed, E_sam3_adaptive) and emits:
 
-    data/tracker_eval/results/metrics_per_video.csv
-    data/tracker_eval/results/metrics_per_cage.csv
-    data/tracker_eval/results/metrics_aggregate.csv
+    data/results/eval_tracking/results/metrics_per_video.csv
+    data/results/eval_tracking/results/metrics_per_cage.csv
+    data/results/eval_tracking/results/metrics_aggregate.csv
 
 Two metric libraries are used:
 

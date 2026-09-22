@@ -1,4 +1,4 @@
-"""Build `data/tracker_eval/video_manifest.csv` from the cached YOLO scan parquets.
+"""Build `data/results/eval_tracking/video_manifest.csv` from the cached YOLO scan parquets.
 
 Ranks the 30 candidate videos (5 cages × 3 groups × 2 days) by a composite
 difficulty score computed across 7 proxies derived from
