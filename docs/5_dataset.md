@@ -38,18 +38,34 @@ pixi run -e dataset build_dataset
 pixi run -e dataset extract_features
 ```
 
-**What it does:** Decodes the RLE masks in `tracks.parquet` frame-by-frame and computes six handcrafted features per bird per frame:
+**What it does:** Decodes the RLE masks in `tracks.parquet` frame-by-frame and computes 19 morphokinematic descriptors per bird per frame:
 
-| Feature | What it captures |
-|---------|-----------------|
-| `mask_area` | Body size / distance from camera |
-| `aspect_ratio` | Pose (upright vs. horizontal) |
-| `velocity` | Movement speed |
-| `area_change_rate` | Rapid size changes (occlusion, pose shifts) |
-| `min_dist_to_other` | Proximity to nearest pen-mate |
-| `mean_dist_to_other` | Average spread across pen |
+| Descriptor | What it captures |
+| --- | --- |
+| **Shape** | |
+| `mask_area` | Segmentation mask area (px²) |
+| `aspect_ratio` | Bounding-box width / height |
+| `elongation` | Major-to-minor axis ratio |
+| `orientation` | Major-axis angle (rad) |
+| `solidity` | Mask area / convex-hull area |
+| `eccentricity` | Roundness to elongation (0–1) |
+| `perimeter` | Outer contour length (px) |
+| `circularity` | 4π × area / perimeter² |
+| **Motion** | |
+| `velocity` | Centroid displacement between frames (px) |
+| `acceleration` | Frame-to-frame change in velocity |
+| `turning_angle` | Angle between consecutive movement directions (rad) |
+| `velocity_autocorr` | Product of consecutive frame speeds (px²) |
+| `area_change_rate` | Frame-to-frame relative change in mask area |
+| `orientation_velocity` | Frame-to-frame change in orientation (rad) |
+| `solidity_change` | Frame-to-frame change in solidity |
+| `elongation_change` | Frame-to-frame change in elongation |
+| **Social** | |
+| `min_dist_to_other` | Min centroid distance to other birds in the frame (px) |
+| `mean_dist_to_other` | Mean centroid distance to other birds in the frame (px) |
+| `dist_change_rate` | Frame-to-frame change in nearest-bird distance (px) |
 
-These are then summarized per window (mean, std, min, max, median → `features_windowed.parquet`) and also stored as frame-binned temporal tensors (`features_binned.pt`) for temporal models.
+These are then summarized per window (mean, std, median, MAD, skew, kurtosis, CV, q10, q90 → `features_windowed.parquet`).
 
 ---
 
@@ -77,7 +93,7 @@ Outputs are saved as `.pt` dicts keyed by `(video_id, bird_id, window)`, e.g. `e
 ## Output files
 
 | File | Keyed by | Contents |
-|------|----------|----------|
+| ------ | ---------- | ---------- |
 | `tracks.parquet` | `(video_id, bird_id, frame_idx)` | Cleaned tracks with RLE masks, bbox, window assignment |
 | `labels.parquet` | `(video_id, bird_id, window)` | Behaviour labels aligned to track coverage |
 | `features_all.parquet` | `(video_id, bird_id, frame_idx)` | Per-frame mask features |
