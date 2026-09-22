@@ -1,5 +1,7 @@
+# pylint: disable=invalid-name
+
 """
-Tracking metrics computation for SAM3 video outputs.
+Tracking metrics computation for video outputs.
 """
 
 from collections import defaultdict
@@ -8,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from src.tracker.masks import _normalize_frame_dict, to_numpy
+from .utils import _normalize_frame_dict, to_numpy
 
 
 ### General spatial metrics (IoU, centroid distances, clustering coefficient) and

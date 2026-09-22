@@ -32,15 +32,6 @@ from ..io import (
     setup_logger,
 )
 from ..memory import free_gpu_memory, free_system_memory
-from ..metrics import (
-    compute_max_pairwise_iou,
-    compute_per_frame_metrics,
-    compute_per_run_metrics,
-    compute_summary_metrics,
-    per_frame_metrics_to_df,
-    per_run_metrics_to_multiindex_df,
-    summary_metrics_to_df,
-)
 from .chunking import (
     build_manual_chunks,
     chunk_video_frames_adaptive,
@@ -50,6 +41,15 @@ from .grounding import (
     find_best_grounding_frame,
     match_grounding_ids_to_previous,
     run_grounding,
+)
+from .metrics import (
+    compute_max_pairwise_iou,
+    compute_per_frame_metrics,
+    compute_per_run_metrics,
+    compute_summary_metrics,
+    per_frame_metrics_to_df,
+    per_run_metrics_to_multiindex_df,
+    summary_metrics_to_df,
 )
 from .scan import run_yolo_scan, yolo_scan_to_df
 from .utils import (

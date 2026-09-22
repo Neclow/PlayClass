@@ -39,8 +39,8 @@ def select_frames_for_video(
     occlusion_top_k: int = DEFAULT_OCCLUSION_TOP_K,
 ) -> tuple[list[tuple[int, str]], dict]:
     """Returns (list of (frame_idx, source), info_dict)."""
-    from src.metrics import compute_yolo_per_frame_metrics
     from src.tracking.chunking import chunk_video_frames_adaptive
+    from src.tracking.metrics import compute_yolo_per_frame_metrics
     from src.tracking.scan import identify_occlusion_periods
 
     yolo_df = pd.read_parquet(scan_dir / "yolo_tracking.parquet")

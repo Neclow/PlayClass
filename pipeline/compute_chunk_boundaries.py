@@ -25,8 +25,8 @@ import yaml
 from loguru import logger
 from omegaconf import OmegaConf
 
-from src.metrics import compute_yolo_per_frame_metrics
 from src.tracking.chunking import chunk_video_frames_adaptive
+from src.tracking.metrics import compute_yolo_per_frame_metrics
 from src.tracking.scan import yolo_scan_to_df
 from src.tracking.viz import plot_chunk_boundary_frames, plot_yolo_scan_overview
 

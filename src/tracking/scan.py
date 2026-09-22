@@ -21,7 +21,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 from ..memory import free_gpu_memory
-from ..metrics import compute_separation_score, compute_yolo_per_frame_metrics
+from .metrics import compute_separation_score, compute_yolo_per_frame_metrics
 
 
 def _draw_label(img: np.ndarray, label: str, x1: float, y1: float) -> None:

@@ -11,9 +11,8 @@ import numpy as np
 
 from loguru import logger
 
-from src.memory import free_gpu_memory
-from src.metrics import compute_max_pairwise_iou
-
+from ..memory import free_gpu_memory
+from .metrics import compute_max_pairwise_iou
 from .utils import get_all_objects_from_results
 
 
