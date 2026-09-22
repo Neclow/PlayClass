@@ -10,7 +10,7 @@ Outputs (PNG @ 300 dpi + PDF vector) under ``img/``:
   - confusion_matrix_poster.{png,pdf}         — row-normalised confusion matrix with marginal metrics
 
 Usage:
-    pixi run -e tracker-evaluation python -m src.tracker_eval.render_poster_figures
+    pixi run -e tracker python -m src.tracker_eval.render_poster_figures
 
 ID-switch counts are deliberately omitted: gs2 has very few switches but
 worse tracking (HOTA, DetA), because mask-propagation failures register as
