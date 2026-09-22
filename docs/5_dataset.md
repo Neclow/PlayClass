@@ -1,9 +1,9 @@
 # Dataset Build
 
-| Script                       | Description                                                          |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `script/build_dataset.py`    | Postprocess tracking outputs, match bird IDs, build dataset parquets |
-| `script/extract_features.py` | Extract mask features + window summaries from dataset tracks (CPU)   |
+| Script                         | Description                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `pipeline/build_dataset.py`    | Postprocess tracking outputs, match bird IDs, build dataset parquets |
+| `pipeline/extract_features.py` | Extract mask features + window summaries from dataset tracks (CPU)   |
 
 ---
 
@@ -90,7 +90,7 @@ CV, q10, q90 → `features_windowed.parquet`).
 pixi run -e embeddings extract_embeddings_dinov3
 
 # V-JEPA 2.1 ViT-L temporal
-pixi run -e embeddings python -m script.extract_embeddings_vjepa2 --temporal
+pixi run -e embeddings python -m pipeline.extract_embeddings_vjepa2 --temporal
 
 # VideoPrism Base temporal
 pixi run -e videoprism extract_videoprism --temporal
