@@ -30,6 +30,7 @@ Usage:
 import argparse
 import sys
 
+from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -83,6 +84,7 @@ def _ensure_eval_deps() -> None:
     mm = _mm
     np = _np
     HOTA = _HOTA
+
 
 VARIANTS = (
     "A_yolo_botsort",
@@ -280,7 +282,9 @@ def run(args: argparse.Namespace) -> None:
     ]
     for v in VARIANTS:
         if v not in variants:
-            print(f"[skip] {v}: predictions incomplete under {args.predictions_mot_dir / v}")
+            print(
+                f"[skip] {v}: predictions incomplete under {args.predictions_mot_dir / v}"
+            )
     print(
         f"{len(videos)} videos x {len(variants)} variants = {len(videos) * len(variants)} runs"
     )
