@@ -276,6 +276,11 @@ def evaluate_fold(
     _eval_dataloader(model, dm.test_dataloader(), model.test_metrics)
     _collect_metrics(result, model.test_metrics)
 
+    cm = result["test_confusion_matrix"]
+    for i, label in dm.label_encoder.ind2lab.items():
+        row_sum = cm[i].sum()
+        result[f"test_recall_{label}"] = cm[i, i] / row_sum if row_sum > 0 else 0.0
+
     _eval_dataloader(model, dm.train_dataloader(), model.train_metrics)
     _collect_metrics(result, model.train_metrics)
 
