@@ -43,20 +43,27 @@ ext-data/          Symlink to large data outputs (results, image sequences, embe
 | Stage | Docs | Environment |
 | ------- | ------ | ------------- |
 | 1. Data (TO-DO: Zenodo deposit in preparation) | [data/README.md](data/README.md) | — |
-| 2. Tracker | [docs/2_tracker.md](docs/2_tracker.md) | `tracker` |
-| 2a. Tracker evaluation *(optional)* | [docs/2a_tracker_eval.md](docs/2a_tracker_eval.md) | `tracker`, `gs2` |
-| 3. Postprocessing | [docs/3_postprocessing.md](docs/3_postprocessing.md) | `dataset` |
-| 4. Build dataset | [docs/4_dataset.md](docs/4_dataset.md) | `dataset` |
-| 5. Embeddings | [docs/5_embeddings.md](docs/5_embeddings.md) | `embeddings`, `videoprism` |
-| 6. Classification | [docs/6_classification.md](docs/6_classification.md) | `classifier` |
+| 2. Tracking | [docs/2_tracking.md](docs/2_tracking.md) | `tracker`, `gs2` |
+| 3. Tracker evaluation *(optional)* | [docs/3_tracker_eval.md](docs/3_tracker_eval.md) | `tracker`, `gs2` |
+| 4. Postprocessing | [docs/4_postprocessing.md](docs/4_postprocessing.md) | `tracker` |
+| 5. Build dataset | [docs/5_dataset.md](docs/5_dataset.md) | `tracker` |
+| 6. Embeddings | [docs/6_embeddings.md](docs/6_embeddings.md) | `embeddings`, `videoprism` |
+| 7. Classification | [docs/7_classification.md](docs/7_classification.md) | `classifier` |
 
-Built from tracking outputs + registration protocol Excel files in three steps:
+### Analysis
+
+| Stage | Docs | Environment |
+|-------|------|-------------|
+| 8. Analysis (clustering, classification figures, feature attribution) | [docs/8_analysis.md](docs/8_analysis.md) | `classifier` |
+
+### Tests
 
 ```sh
 # 1. Labels, postprocessing, windows (fast, ~seconds)
 pixi run -e dataset build_dataset
 
-pixi run -e dataset test_features         # Feature extraction unit tests (pytest)
-pixi run -e dataset test_postprocessing   # Postprocessing logic unit tests (pytest)
-pixi run -e dataset test_post_build       # Data integrity checks on a built dataset (pytest; skipped if no dataset)
+pixi run test_features                    # Feature extraction unit tests (pytest)
+pixi run test_postprocessing              # Postprocessing logic unit tests (pytest)
+pixi run test_labels                      # Label parsing unit tests (pytest)
+pixi run test_post_build                  # Data integrity checks on a built dataset (pytest; skipped if no dataset)
 ```

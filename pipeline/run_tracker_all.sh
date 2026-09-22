@@ -2,7 +2,7 @@
 # Run all tracker variants via the unified launcher.
 #
 # Each variant maps to a production config and a pixi environment.
-# See docs/2a_tracker_eval.md for the full ablation table.
+# See docs/3_tracker_eval.md for the full ablation table.
 #
 # Usage:
 #   bash pipeline/run_tracker_all.sh              # all variants
