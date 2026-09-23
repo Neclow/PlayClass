@@ -53,6 +53,7 @@ test_labels = "python -m pytest tests/test_labels.py -v"
 check_dataset_integrity = "python -m tests.check_dataset_integrity"
 test_dataset_integrity = "python -m pytest tests/test_dataset_integrity.py -v"
 test_pooling = "python -m pytest tests/test_pooling.py -v"
+test_val_rotation = "python -m pytest tests/test_val_rotation.py -v"
 check_crop_modes = "python -m tests.check_crop_modes"
 
 [dependencies]
@@ -60,6 +61,7 @@ python = ">=3.11,<3.12"
 pytest = ">=9.0.2,<10"
 packaging = ">=20,<26.3"
 pre-commit = ">=4.6.2,<5"
+filelock = ">=3.16"
 
 [pypi-dependencies]
 ipykernel = ">=7.1.0"
