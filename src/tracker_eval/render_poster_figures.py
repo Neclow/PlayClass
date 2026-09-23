@@ -26,6 +26,8 @@ family steps read as model-backbone swaps.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import matplotlib.colors as mcolors
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -146,12 +148,12 @@ def _annotate_bars(ax, bars, fmt="{:.3f}", offset=0.005, fontsize=8):
 
 agg = (
     pd
-    .read_csv(RESULTS_DIR / "metrics_aggregate.csv")
+    .read_csv(Path(RESULTS_DIR) / "metrics_aggregate.csv")
     .set_index("variant")
     .loc[VARIANT_ORDER]
 )
-per_video = pd.read_csv(RESULTS_DIR / "metrics_per_video.csv")
-per_cage = pd.read_csv(RESULTS_DIR / "metrics_per_cage.csv")
+per_video = pd.read_csv(Path(RESULTS_DIR) / "metrics_per_video.csv")
+per_cage = pd.read_csv(Path(RESULTS_DIR) / "metrics_per_cage.csv")
 
 N_VARIANTS = len(VARIANT_ORDER)
 BAR_WIDTH = 0.13  # 6 variants × 0.13 = 0.78, leaves 0.22 gap between groups

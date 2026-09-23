@@ -27,6 +27,8 @@ Usage:
     pixi run -e tracker python -m pipeline.eval_tracker_all evaluate
 """
 
+from __future__ import annotations
+
 import argparse
 import sys
 
