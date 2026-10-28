@@ -3,9 +3,10 @@
 [![Code DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22896784.svg)](https://doi.org/10.5281/zenodo.22896784)
 [![Data DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22896874.svg)](https://doi.org/10.5281/zenodo.22896874)
 
-> **Featured in the
+> 🐙 **Featured in the
 > [GitHub Octoverse 2026](https://github.blog/news-insights/octoverse/octoverse-commits-pushes-reach-new-highs-in-2026-as-developers-build-with-agents/)**
-> | Presented at the [CV4Animals Workshop](https://www.cv4animals.com/) at CVPR
+>
+> 📋 Presented at the [CV4Animals Workshop](https://www.cv4animals.com/) at CVPR
 > 2026
 
 Repository for _Hybrid morphokinematic and learnable video representations for
