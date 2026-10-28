@@ -4,10 +4,10 @@
 [![Data DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22896874.svg)](https://doi.org/10.5281/zenodo.22896874)
 
 > :octocat: **Featured in the
-> [GitHub Octoverse 2026](https://github.blog/news-insights/octoverse/octoverse-commits-pushes-reach-new-highs-in-2026-as-developers-build-with-agents/)**
+> [GitHub Octoverse 2026](https://github.blog/news-insights/octoverse/octoverse-commits-pushes-reach-new-highs-in-2026-as-developers-build-with-agents/)!**
 >
 > 📋 Presented at the [CV4Animals Workshop](https://www.cv4animals.com/) at CVPR
-> 2026
+> 2026!
 
 Repository for _Hybrid morphokinematic and learnable video representations for
 analysis of chicken play behaviour_, Under review, 2026.
